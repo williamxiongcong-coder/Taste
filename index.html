@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Taste</title>
+<meta name="description" content="自己的音乐与播客播放器 — 本地音乐、播客订阅、驾驶模式，数据全部保存在本机。">
+<meta name="theme-color" content="#0a0c12">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taste">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Chivo+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="glow" aria-hidden="true"></div>
+
+<div id="app">
+
+  <!-- ====== 音乐 ====== -->
+  <main id="view-music" class="view">
+    <header class="vhead">
+      <div class="vtitle">
+        <span class="logo-dot" aria-hidden="true"></span>
+        <h1>音乐</h1>
+      </div>
+      <button class="icon-btn" id="musicAddBtn" title="添加音乐" aria-label="添加音乐">
+        <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+      </button>
+    </header>
+
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="search" id="musicSearch" placeholder="搜索歌名、歌手" aria-label="搜索音乐">
+    </div>
+
+    <div class="chip-row">
+      <button class="chip on" data-mfilter="all" id="chipAll">全部</button>
+      <button class="chip" data-mfilter="liked" id="chipLiked">喜欢 ♥</button>
+      <span class="flex-spacer"></span>
+      <button class="pill-btn" id="playAllBtn">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>播放全部
+      </button>
+      <button class="pill-btn ghost" id="shuffleAllBtn">
+        <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>随机
+      </button>
+    </div>
+
+    <div class="stat-line" id="musicStat">0 首歌曲</div>
+
+    <ul class="song-list" id="songList"></ul>
+
+    <div class="empty" id="musicEmpty">
+      <div class="empty-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      </div>
+      <p><b>把你的音乐装进来</b></p>
+      <p class="dim">点击右上角 + 选择手机或电脑里的 MP3 / FLAC / M4A 文件。<br>歌曲保存在本机，开车没信号也能播放。</p>
+      <button class="pill-btn big" id="emptyAddBtn">
+        <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>添加音乐
+      </button>
+    </div>
+  </main>
+
+  <!-- ====== 播客 ====== -->
+  <main id="view-podcast" class="view" hidden>
+    <header class="vhead">
+      <div class="vtitle">
+        <span class="logo-dot" aria-hidden="true"></span>
+        <h1>播客</h1>
+      </div>
+      <button class="icon-btn" id="podRssBtn" title="通过 RSS 链接添加" aria-label="通过 RSS 链接添加">
+        <svg viewBox="0 0 24 24"><path d="M6.18 17.82a2.18 2.18 0 1 1-4.36 0 2.18 2.18 0 0 1 4.36 0zM2 8.73v2.91c5.72 0 10.36 4.64 10.36 10.36h2.91C15.27 14.67 9.33 8.73 2 8.73zM2 3v2.91C11.36 5.91 18.09 12.64 18.09 22H21C21 11.03 12.97 3 2 3z"/></svg>
+      </button>
+    </header>
+
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="search" id="podSearch" placeholder="搜索播客节目，如：故事FM" aria-label="搜索播客" enterkeyhint="search">
+    </div>
+
+    <div id="podSearchResults" class="pod-results" hidden></div>
+
+    <h2 class="sec-title" id="subTitle">我的订阅</h2>
+    <div class="sub-grid" id="subGrid"></div>
+
+    <div class="empty" id="podEmpty">
+      <div class="empty-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4zm7 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg>
+      </div>
+      <p><b>订阅你喜欢的播客</b></p>
+      <p class="dim">在上方搜索节目名称，或用 RSS 链接添加。<br>每集的收听进度会自动记住，下次接着听。</p>
+    </div>
+  </main>
+
+  <!-- ====== 设置 ====== -->
+  <main id="view-settings" class="view" hidden>
+    <header class="vhead">
+      <div class="vtitle">
+        <span class="logo-dot" aria-hidden="true"></span>
+        <h1>设置</h1>
+      </div>
+    </header>
+
+    <div class="set-card">
+      <div class="set-row">
+        <div><b>外观</b><span class="dim">跟随系统 / 深色 / 浅色</span></div>
+        <div class="seg" id="themeSeg">
+          <button data-theme-pick="auto" class="on">自动</button>
+          <button data-theme-pick="dark">深色</button>
+          <button data-theme-pick="light">浅色</button>
+        </div>
+      </div>
+      <div class="set-row">
+        <div><b>播客倍速</b><span class="dim">播放播客时的默认速度</span></div>
+        <button class="pill-btn ghost" id="rateBtn">1.0×</button>
+      </div>
+      <div class="set-row">
+        <div><b>驾驶模式</b><span class="dim">大按钮、屏幕常亮，开车更安全</span></div>
+        <button class="pill-btn" id="setDriveBtn">进入</button>
+      </div>
+    </div>
+
+    <div class="set-card">
+      <div class="set-row">
+        <div><b>安装到手机</b><span class="dim">iPhone：Safari 打开 → 分享 → 添加到主屏幕<br>安卓：Chrome 打开 → 菜单 → 安装应用</span></div>
+      </div>
+      <div class="set-row">
+        <div><b>数据与隐私</b><span class="dim">音乐文件、播客订阅和收听进度全部保存在本机浏览器中，不会上传到任何服务器。</span></div>
+      </div>
+      <div class="set-row">
+        <div><b>清空所有数据</b><span class="dim">删除本机保存的全部歌曲与订阅</span></div>
+        <button class="pill-btn danger" id="wipeBtn">清空</button>
+      </div>
+    </div>
+
+    <p class="about dim">Taste · 为自己做的播放器</p>
+  </main>
+
+  <!-- ====== 底部导航 ====== -->
+  <nav id="tabbar" aria-label="主导航">
+    <button class="tab on" data-view="music">
+      <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      <span>音乐</span>
+    </button>
+    <button class="tab" data-view="podcast">
+      <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4zm7 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg>
+      <span>播客</span>
+    </button>
+    <button class="tab" data-view="settings">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L2.63 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.61.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.21.1.48.01.61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
+      <span>设置</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ====== 迷你播放条（在弹层之上） ====== -->
+<div id="mini" class="mini" hidden>
+  <div class="mini-prog" id="miniProg"></div>
+  <img id="miniArt" alt="" hidden>
+  <div class="mini-art-fallback" id="miniArtFb"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></div>
+  <div class="mini-meta">
+    <span class="mini-title" id="miniTitle">未在播放</span>
+    <span class="mini-sub" id="miniSub"></span>
+  </div>
+  <button class="icon-btn" id="miniPlay" aria-label="播放或暂停">
+    <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg class="i-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+  </button>
+  <button class="icon-btn" id="miniNext" aria-label="下一首">
+    <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6l10 6-10 6z"/></svg>
+  </button>
+</div>
+
+<!-- ====== 正在播放（全屏） ====== -->
+<section id="nowSheet" class="sheet now" hidden aria-label="正在播放">
+  <div class="now-bg" id="nowBg" aria-hidden="true"></div>
+  <div class="now-inner">
+    <header class="now-head">
+      <button class="icon-btn" id="nowClose" aria-label="收起">
+        <svg viewBox="0 0 24 24"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+      </button>
+      <span class="now-src latin" id="nowSrc">NOW PLAYING</span>
+      <button class="icon-btn" id="nowDrive" title="驾驶模式" aria-label="驾驶模式">
+        <svg viewBox="0 0 24 24"><path d="M18.92 6.01A1.5 1.5 0 0 0 17.5 5h-11a1.5 1.5 0 0 0-1.42 1.01L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.85 7h10.3l1.04 3H5.81l1.04-3zM6.5 16A1.5 1.5 0 1 1 8 14.5 1.5 1.5 0 0 1 6.5 16zm11 0a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5z"/></svg>
+      </button>
+    </header>
+
+    <div class="now-art-wrap">
+      <img id="nowArt" alt="" hidden>
+      <div class="now-art-fallback" id="nowArtFb">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      </div>
+    </div>
+
+    <div class="now-meta">
+      <h2 id="nowTitle">未在播放</h2>
+      <p id="nowSub" class="dim"></p>
+    </div>
+
+    <div class="now-seek">
+      <input type="range" id="nowSeek" min="0" max="1000" value="0" step="1" aria-label="播放进度">
+      <div class="now-times mono"><span id="nowCur">0:00</span><span id="nowDur">0:00</span></div>
+    </div>
+
+    <!-- 音乐控制 -->
+    <div class="now-ctl" id="ctlMusic">
+      <button class="icon-btn sm" id="nowShuffle" title="随机播放" aria-label="随机播放">
+        <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+      </button>
+      <button class="icon-btn lg" id="nowPrev" aria-label="上一首">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm14 0-10 6 10 6z"/></svg>
+      </button>
+      <button class="now-play" id="nowPlay" aria-label="播放或暂停">
+        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+      <button class="icon-btn lg" id="nowNext" aria-label="下一首">
+        <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6l10 6-10 6z"/></svg>
+      </button>
+      <button class="icon-btn sm" id="nowRepeat" title="循环" aria-label="循环模式">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        <span class="one mono">1</span>
+      </button>
+    </div>
+
+    <!-- 播客控制 -->
+    <div class="now-ctl" id="ctlPod" hidden>
+      <button class="icon-btn sm mono-btn" id="nowRate" title="倍速">1.0×</button>
+      <button class="icon-btn lg skip" id="nowBack15" aria-label="后退 15 秒">
+        <svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        <span class="skip-n mono">15</span>
+      </button>
+      <button class="now-play" id="nowPlayPod" aria-label="播放或暂停">
+        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+      <button class="icon-btn lg skip" id="nowFwd30" aria-label="前进 30 秒">
+        <svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        <span class="skip-n mono">30</span>
+      </button>
+      <button class="icon-btn sm" id="nowNextEp" title="下一集" aria-label="下一集">
+        <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6l10 6-10 6z"/></svg>
+      </button>
+    </div>
+
+    <div class="now-extra">
+      <button class="icon-btn sm" id="nowLike" aria-label="喜欢">
+        <svg class="i-heart" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+      <div class="vol">
+        <svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z"/></svg>
+        <input type="range" id="nowVol" min="0" max="100" value="80" step="1" aria-label="音量">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== 播客节目详情 ====== -->
+<section id="showSheet" class="sheet show-sheet" hidden aria-label="播客详情">
+  <header class="show-head">
+    <button class="icon-btn" id="showBack" aria-label="返回">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+    </button>
+    <span class="show-head-title" id="showHeadTitle"></span>
+    <button class="icon-btn" id="showUnsub" title="取消订阅" aria-label="取消订阅">
+      <svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 12H7L6 9z"/></svg>
+    </button>
+  </header>
+  <div class="show-hero">
+    <img id="showCover" alt="">
+    <div class="show-hero-meta">
+      <h2 id="showTitle"></h2>
+      <p id="showAuthor" class="dim"></p>
+      <p id="showDesc" class="dim small"></p>
+    </div>
+  </div>
+  <div class="show-toolbar">
+    <span class="dim" id="epCount"></span>
+    <button class="pill-btn ghost sm-btn" id="showRefresh">
+      <svg viewBox="0 0 24 24"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg>刷新
+    </button>
+  </div>
+  <ul class="ep-list" id="epList"></ul>
+</section>
+
+<!-- ====== 驾驶模式 ====== -->
+<section id="drive" class="drive" hidden aria-label="驾驶模式">
+  <header class="drive-head">
+    <span class="drive-clock mono" id="driveClock">--:--</span>
+    <button class="drive-exit" id="driveExit">退出</button>
+  </header>
+  <div class="drive-meta">
+    <p class="drive-title" id="driveTitle">未在播放</p>
+    <p class="drive-sub" id="driveSub"></p>
+  </div>
+  <div class="drive-prog"><div class="drive-prog-fill" id="driveProgFill"></div></div>
+  <div class="drive-ctl">
+    <button class="drive-btn" id="drivePrev" aria-label="上一首或后退">
+      <svg class="d-music" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm14 0-10 6 10 6z"/></svg>
+      <svg class="d-pod" viewBox="0 0 24 24" hidden><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+    </button>
+    <button class="drive-btn main" id="drivePlay" aria-label="播放或暂停">
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+    </button>
+    <button class="drive-btn" id="driveNext" aria-label="下一首或前进">
+      <svg class="d-music" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6l10 6-10 6z"/></svg>
+      <svg class="d-pod" viewBox="0 0 24 24" hidden style="transform:scaleX(-1)"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+    </button>
+  </div>
+</section>
+
+<div id="toast" role="status"></div>
+<input type="file" id="filePick" multiple accept="audio/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.oga,.opus,.webm" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>
