@@ -428,19 +428,84 @@ $('#nowClose').addEventListener('click', () => { $('#nowSheet').hidden = true; }
 const CATS = [
   { id: 'piano',     name: '钢琴曲' },
   { id: 'classical', name: '古典' },
+  { id: 'inst',      name: '轻音乐' },
   { id: 'country',   name: '乡村 Country' },
   { id: 'pop',       name: '流行' },
   { id: 'none',      name: '未分类' }
 ];
 const catName = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).name;
-/* 根据音乐文件自带的流派标签 / 文件名猜一个分类 */
+
+/* 第一层：本地规则 —— 熟知的歌手 / 作曲家直接判定 */
+const ARTIST_CATS = [
+  [/richard clayderman|克莱德曼|yiruma|李闰珉|maksim|马克西姆|郎朗|lang lang|李云迪|yundi li/i, 'piano'],
+  [/chopin|mozart|beethoven|bach|debussy|tchaikovsky|liszt|schubert|brahms|vivaldi|handel|haydn|rachmaninoff|paganini|rubinstein|肖邦|莫扎特|贝多芬|巴赫|德彪西|柴可夫斯基|李斯特|舒伯特|维瓦尔第|帕格尼尼/i, 'classical'],
+  [/bandari|班得瑞|kenny g|凯丽金|yanni|雅尼|secret garden|神秘园|enya|恩雅|久石让|joe hisaishi|karunesh|kevin kern/i, 'inst'],
+  [/john denver|kenny rogers|dolly parton|shania twain|carrie underwood|luke combs|morgan wallen|blake shelton|alan jackson|tim mcgraw|garth brooks|johnny cash|keith urban/i, 'country'],
+  [/周杰伦|jay chou|林俊杰|jj lin|邓紫棋|g\.e\.m|陈奕迅|eason chan|王力宏|薛之谦|李荣浩|张学友|刘德华|王菲|孙燕姿|五月天|mayday|张惠妹|陶喆|方大同|毛不易|周深|李宗盛|陈绮贞|taylor swift|ed sheeran|adele|bruno mars|justin bieber|billie eilish|maroon 5|coldplay|westlife|backstreet boys|avril|lady gaga|rihanna/i, 'pop']
+];
 function guessCat(meta, fileName){
-  const g = ((meta.genre || '') + ' ' + (meta.title || '') + ' ' + (meta.album || '') + ' ' + fileName).toLowerCase();
+  const hay = [meta.artist, meta.title, meta.album, meta.genre, fileName].filter(Boolean).join(' ');
+  for(const [re, id] of ARTIST_CATS){ if(re.test(hay)) return id; }
+  const g = hay.toLowerCase();
   if(/piano|钢琴/.test(g)) return 'piano';
-  if(/classic|古典|baroque|sympho|orchestr|concerto|sonata|violin|小提琴|大提琴|chopin|mozart|beethoven|bach|debussy|肖邦|莫扎特|贝多芬|巴赫/.test(g)) return 'classical';
-  if(/country|乡村|bluegrass|folk/.test(g)) return 'country';
-  if(/pop|流行|rock|r&b|hip.?hop|rap|dance|electro|摇滚/.test(g)) return 'pop';
+  if(/classic|古典|baroque|sympho|orchestr|concerto|sonata|nocturne|etude|violin|cello|小提琴|大提琴|协奏曲|交响|夜曲集/.test(g)) return 'classical';
+  if(/new age|instrumental|纯音乐|轻音乐|soundtrack|原声|bgm|ambient/.test(g)) return 'inst';
+  if(/country|乡村|bluegrass/.test(g)) return 'country';
+  if(/pop|流行|rock|r&b|hip.?hop|rap|dance|electro|摇滚|民谣|说唱/.test(g)) return 'pop';
   return 'none';
+}
+
+/* 第二层：联网查 Apple Music 曲库的官方流派（本地认不出时用） */
+function mapITunesGenre(name){
+  if(!name) return null;
+  const n = String(name).toLowerCase();
+  if(/classical|opera|chamber|古典|歌剧/.test(n)) return 'classical';
+  if(/country|乡村/.test(n)) return 'country';
+  if(/new age|instrumental|soundtrack|easy listening|ambient|轻音乐|纯音乐|新世纪|原声/.test(n)) return 'inst';
+  if(/piano|钢琴/.test(n)) return 'piano';
+  if(/pop|rock|r&b|soul|hip|rap|dance|electronic|singer|folk|alternative|metal|indie|流行|摇滚|说唱|嘻哈|民谣|舞曲|电子/.test(n)) return 'pop';
+  return null;
+}
+async function lookupCat(s){
+  const q = [s.artist, s.title].filter(Boolean).join(' ').trim();
+  if(!q) return null;
+  for(const extra of ['', '&country=CN']){
+    try{
+      const d = await fetchX('https://itunes.apple.com/search?media=music&limit=4' + extra + '&term=' + encodeURIComponent(q), true);
+      for(const r of (d.results || [])){
+        const cat = mapITunesGenre(r.primaryGenreName);
+        if(cat) return cat;
+      }
+    }catch(e){}
+  }
+  return null;
+}
+
+/* 智能分类：先本地规则，认不出再联网查；手动分过的（catLocked）不动 */
+let classifying = false;
+async function autoClassify(onlyNew){
+  if(classifying) return;
+  const targets = songs.filter(s => !s.catLocked && (onlyNew ? (s.cat || 'none') === 'none' : true));
+  if(!targets.length){ if(!onlyNew) toast('没有需要分类的歌曲'); return; }
+  classifying = true;
+  if(!onlyNew) toast('正在智能分类 ' + targets.length + ' 首歌曲…');
+  let changed = 0;
+  for(const s of targets){
+    let cat = guessCat({ title: s.title, artist: s.artist, album: s.album, genre: s.genre || '' }, '');
+    let usedNet = false;
+    if(cat === 'none'){ cat = (await lookupCat(s)) || 'none'; usedNet = true; }
+    if(cat !== 'none' && cat !== s.cat){
+      s.cat = cat;
+      S.put('songs', s);
+      changed++;
+      renderSongs();
+    }
+    if(usedNet) await new Promise(r => setTimeout(r, 300));   // 联网查询时限速，避免被接口限流
+  }
+  classifying = false;
+  renderSongs();
+  const left = songs.filter(s => (s.cat || 'none') === 'none').length;
+  toast('智能分类完成：' + changed + ' 首已归类' + (left ? '，' + left + ' 首没认出来，可点 ⋯ 手动选' : ''));
 }
 function readTags(file){
   return new Promise(resolve => {
@@ -492,7 +557,7 @@ async function addFiles(fileList){
   for(const f of files){
     const meta = await readTags(f);
     const t = { id: uid(), title: meta.title, artist: meta.artist, album: meta.album,
-                cat: guessCat(meta, f.name),
+                cat: guessCat(meta, f.name), genre: meta.genre || '',
                 pic: meta.pic, blob: f, dur: 0, liked: false, addedAt: Date.now() };
     songs.push(t);
     S.put('songs', t);
@@ -500,6 +565,7 @@ async function addFiles(fileList){
   }
   renderSongs();
   toast('已添加 ' + files.length + ' 首歌曲');
+  if(songs.some(s => !s.catLocked && (s.cat || 'none') === 'none')) autoClassify(true);   // 没认出的去联网识别
 }
 function visibleSongs(){
   return songs.filter(s => {
@@ -608,6 +674,7 @@ function openSongMenu(s){
     }
     b.addEventListener('click', () => {
       s.cat = c.id;
+      s.catLocked = true;   // 手动选过的，智能分类不再改动
       S.put('songs', s);
       sheetMask.hidden = true;
       renderSongs();
@@ -637,6 +704,7 @@ $('#emptyAddBtn').addEventListener('click', () => $('#filePick').click());
 $('#filePick').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
 $('#playAllBtn').addEventListener('click', () => playAllSongs(false));
 $('#shuffleAllBtn').addEventListener('click', () => playAllSongs(true));
+$('#autoCatBtn').addEventListener('click', () => autoClassify(false));
 $$('.chip[data-mfilter]').forEach(c => c.addEventListener('click', () => {
   musicFilter = c.dataset.mfilter;
   $$('.chip[data-mfilter]').forEach(x => x.classList.toggle('on', x === c));
