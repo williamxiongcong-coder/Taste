@@ -16,6 +16,7 @@
   --danger:#d98874;
   --glow:217,189,141;             /* rgb of current ambient color, JS-updated */
   --font-body:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --font-serif:'Noto Serif SC','Songti SC','SimSun',serif;
   --font-latin:'Familjen Grotesk','Noto Sans SC',system-ui,sans-serif;
   --font-mono:'Chivo Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   --radius:16px;
@@ -542,3 +543,85 @@ input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; 
 .as-item .check{color:var(--accent); font-weight:700}
 .as-item.danger{color:var(--danger)}
 .as-sep{height:1px; background:var(--line); margin:6px 8px}
+
+/* ---------- 首页 · 杂志版式 ---------- */
+.mast{display:flex; align-items:flex-end; justify-content:space-between; gap:12px}
+.mast-text{min-width:0}
+.brand-eyebrow{font-size:10.5px; letter-spacing:.34em; color:var(--accent); font-weight:600}
+.greet{
+  margin:3px 0 0; font-family:var(--font-serif); font-size:30px; font-weight:600;
+  line-height:1.2; letter-spacing:.01em;
+}
+
+/* 继续聆听主卡片 */
+.hero{
+  display:flex; align-items:center; gap:14px;
+  background:linear-gradient(150deg, var(--card-2), var(--card) 68%);
+  border:1px solid var(--line); border-radius:20px; padding:14px 16px;
+  box-shadow:0 14px 40px rgba(0,0,0,.22), 0 0 50px rgba(var(--glow), .07);
+  cursor:pointer;
+}
+.hero-vinyl{
+  width:64px; height:64px; border-radius:50%; flex:none; position:relative; overflow:hidden;
+  background:repeating-radial-gradient(circle at 50% 50%, #0d0b09 0 1.3px, #19140f 1.3px 2.8px);
+  border:1px solid #372e20;
+  animation:vinyl-spin 7s linear infinite; animation-play-state:paused;
+}
+.hero-vinyl.on{animation-play-state:running}
+@media (prefers-reduced-motion: reduce){ .hero-vinyl{animation:none} }
+#heroArt, .hero-label{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:46%; height:46%; border-radius:50%; object-fit:cover;
+}
+.hero-label{
+  background:radial-gradient(circle, #3b3122, #241e14 72%);
+  display:flex; align-items:center; justify-content:center; color:var(--accent);
+}
+.hero-label svg{width:46%; height:46%}
+.hero-meta{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+.hero-tag{font-size:10.5px; letter-spacing:.22em; color:var(--accent); font-weight:700}
+.hero-meta b{
+  font-family:var(--font-serif); font-size:17px; font-weight:700;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.hero-meta .dim{font-size:12px}
+.hero-play{
+  width:52px; height:52px; border-radius:50%; flex:none;
+  background:var(--accent); color:var(--accent-ink);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 20px rgba(var(--glow), .3);
+}
+.hero-play svg{width:24px; height:24px}
+.hero-play:active{transform:scale(.94)}
+
+/* 杂志目录式分类页签 */
+.cat-tabs{display:flex; gap:22px; border-bottom:1px solid var(--line)}
+.cat-tabs .chip{
+  background:none; border:none; border-radius:0;
+  padding:6px 0 11px; font-size:14px; color:var(--muted); position:relative; font-weight:400;
+}
+.cat-tabs .chip.on{color:var(--fg); font-weight:700; background:none}
+.cat-tabs .chip.on::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--accent);
+}
+
+/* 列表区头部 + 文字按钮 */
+.list-head-row{display:flex; align-items:center; gap:18px}
+.mini-act{font-size:12.5px; color:var(--muted); letter-spacing:.06em}
+.mini-act:hover{color:var(--accent)}
+
+/* 歌曲列表：发丝线编辑部排版 */
+.song-list{gap:0}
+.song{
+  border-radius:0; padding:11px 2px;
+  border-bottom:1px solid color-mix(in srgb, var(--line) 52%, transparent);
+}
+.song:last-child{border-bottom:none}
+.song:hover, .song.active{background:none}
+
+/* 胶片颗粒 */
+body::after{
+  content:""; position:fixed; inset:0; z-index:100; pointer-events:none; opacity:.028;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] body::after, :root.theme-light body::after{opacity:.02}

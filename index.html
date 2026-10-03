@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="Taste">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Chivo+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Chivo+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -24,19 +24,37 @@
 
 <div id="app">
 
-  <!-- ====== 音乐 ====== -->
+  <!-- ====== 音乐（首页） ====== -->
   <main id="view-music" class="view">
-    <header class="vhead">
-      <div class="vtitle">
-        <span class="logo-dot" aria-hidden="true"></span>
-        <h1>音乐</h1>
+    <header class="mast">
+      <div class="mast-text">
+        <div class="brand-eyebrow latin">TASTE</div>
+        <h1 class="greet" id="greet">你好</h1>
       </div>
       <button class="icon-btn" id="musicAddBtn" title="添加音乐" aria-label="添加音乐">
         <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
       </button>
     </header>
 
-    <div class="chip-row chips-scroll" id="catChips">
+    <section class="hero" id="heroCard" hidden>
+      <div class="hero-vinyl" id="heroVinyl">
+        <img id="heroArt" alt="" hidden>
+        <div class="hero-label" id="heroLabel">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <span class="hero-tag" id="heroTag">继续聆听</span>
+        <b id="heroTitle"></b>
+        <span class="dim" id="heroSub"></span>
+      </div>
+      <button class="hero-play" id="heroPlay" aria-label="播放或暂停">
+        <svg class="h-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="h-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+    </section>
+
+    <nav class="cat-tabs chips-scroll" id="catChips" aria-label="音乐分类">
       <button class="chip on" data-mfilter="all">全部</button>
       <button class="chip" data-mfilter="liked">♥ 喜欢</button>
       <button class="chip" data-mfilter="piano">钢琴曲</button>
@@ -45,20 +63,13 @@
       <button class="chip" data-mfilter="country">乡村 Country</button>
       <button class="chip" data-mfilter="pop">流行</button>
       <button class="chip" data-mfilter="none">未分类</button>
-    </div>
+    </nav>
 
-    <div class="chip-row">
-      <button class="pill-btn" id="playAllBtn">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>播放全部
-      </button>
-      <button class="pill-btn ghost" id="shuffleAllBtn">
-        <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>随机
-      </button>
-      <button class="pill-btn ghost" id="autoCatBtn" title="自动识别全部歌曲的分类">
-        <svg viewBox="0 0 24 24"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>智能分类
-      </button>
-      <span class="flex-spacer"></span>
+    <div class="list-head-row">
       <span class="stat-line" id="musicStat">0 首歌曲</span>
+      <span class="flex-spacer"></span>
+      <button class="mini-act" id="shuffleAllBtn">随机播放</button>
+      <button class="mini-act" id="autoCatBtn" title="自动识别全部歌曲的分类">智能分类</button>
     </div>
 
     <ul class="song-list" id="songList"></ul>

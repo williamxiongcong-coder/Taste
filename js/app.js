@@ -161,6 +161,7 @@ async function playItem(item){
     audio.src = curURL;
     audio.playbackRate = 1;
     current = s; curKind = 'song';
+    ls.set('lastSong', s.id);
     setNowUI(s.title, catName(s.cat || 'none'), s.pic || null, 'song');
     audio.play().catch(() => updatePlayUI());
   }else{
@@ -355,6 +356,7 @@ function updatePlayUI(){
   $$('.i-pause').forEach(el => el.toggleAttribute('hidden', !playing));
   $$('.song.active').forEach(r => r.classList.toggle('playing', !!playing));
   $('#turntable').classList.toggle('playing', !!playing);   // 唱片旋转 + 唱臂落下
+  renderHero();
   try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'; }catch(e){}
 }
 
@@ -635,6 +637,32 @@ function renderSongs(){
   $('#musicStat').textContent = songs.length + ' 首歌曲' + (total ? ' · 共 ' + fmt(total) : '');
   $('#musicEmpty').hidden = songs.length > 0;
   $('#musicStat').hidden = songs.length === 0;
+  renderHero();
+}
+
+/* 首页「继续聆听」主卡片 */
+function heroTarget(){
+  if(curKind === 'song' && current) return current;
+  const lastId = ls.get('lastSong', null);
+  return songs.find(s => s.id === lastId) || songs[0] || null;
+}
+function renderHero(){
+  const hero = $('#heroCard');
+  const t = heroTarget();
+  if(!t){ hero.hidden = true; return; }
+  hero.hidden = false;
+  $('#heroTitle').textContent = t.title;
+  $('#heroSub').textContent = catName(t.cat || 'none');
+  const isCur = curKind === 'song' && current === t;
+  const playingThis = isCur && !audio.paused;
+  $('#heroTag').textContent = playingThis ? '正在播放' : (isCur ? '已暂停' : (ls.get('lastSong', null) ? '继续聆听' : '开始聆听'));
+  $('#heroVinyl').classList.toggle('on', playingThis);
+  $('#heroPlay').querySelector('.h-play').toggleAttribute('hidden', playingThis);
+  $('#heroPlay').querySelector('.h-pause').toggleAttribute('hidden', !playingThis);
+  const art = $('#heroArt');
+  const u = coverURL(t);
+  if(u){ art.src = u; art.hidden = false; $('#heroLabel').hidden = true; }
+  else { art.hidden = true; $('#heroLabel').hidden = false; }
 }
 function removeSong(s){
   const i = songs.indexOf(s);
@@ -702,7 +730,18 @@ function playAllSongs(shuffled){
 $('#musicAddBtn').addEventListener('click', () => $('#filePick').click());
 $('#emptyAddBtn').addEventListener('click', () => $('#filePick').click());
 $('#filePick').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
-$('#playAllBtn').addEventListener('click', () => playAllSongs(false));
+$('#heroPlay').addEventListener('click', e => {
+  e.stopPropagation();
+  const t = heroTarget();
+  if(!t) return;
+  if(curKind === 'song' && current === t){ togglePlay(); return; }
+  const items = songs.map(x => ({ kind: 'song', id: x.id }));
+  startQueue(items, Math.max(0, songs.indexOf(t)));
+});
+$('#heroCard').addEventListener('click', () => {
+  if(curKind === 'song' && current === heroTarget()){ $('#nowSheet').hidden = false; return; }
+  $('#heroPlay').click();
+});
 $('#shuffleAllBtn').addEventListener('click', () => playAllSongs(true));
 $('#autoCatBtn').addEventListener('click', () => autoClassify(false));
 $$('.chip[data-mfilter]').forEach(c => c.addEventListener('click', () => {
@@ -1072,6 +1111,8 @@ window.addEventListener('pagehide', savePosNow);
 /* ================= 启动 ================= */
 async function init(){
   applyTheme();
+  const h = new Date().getHours();
+  $('#greet').textContent = h < 5 ? '夜深了' : h < 11 ? '早上好' : h < 13 ? '中午好' : h < 18 ? '下午好' : '晚上好';
   applyVolume(ls.get('vol', 80));
   $('#nowShuffle').classList.toggle('toggled', shuffle);
   applyRepeatUI();
