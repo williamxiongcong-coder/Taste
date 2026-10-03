@@ -139,7 +139,7 @@ async function extractColor(src){
   }catch(e){ return null; }
 }
 function setGlow(rgb){
-  document.documentElement.style.setProperty('--glow', rgb ? rgb.join(',') : '63,224,197');
+  document.documentElement.style.setProperty('--glow', rgb ? rgb.join(',') : '217,189,141');
 }
 
 /* ================= 播放引擎 ================= */

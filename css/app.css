@@ -3,18 +3,18 @@
    bottom tab bar + mini player on phone, centered column on desktop. */
 
 :root{
-  --bg:#0a0c12;
-  --bg-elev:#10131c;
-  --card:#161a26;
-  --card-2:#1d2231;
-  --line:#272e40;
-  --fg:#edf0f8;
-  --muted:#8a92a8;
-  --accent:#3fe0c5;
-  --accent-deep:#19b89e;
-  --accent-ink:#04221c;
-  --danger:#ff6b5e;
-  --glow:63,224,197;             /* rgb of current ambient color, JS-updated */
+  --bg:#131110;
+  --bg-elev:#191613;
+  --card:#1f1b16;
+  --card-2:#282217;
+  --line:#332c21;
+  --fg:#ede5d5;
+  --muted:#9c9078;
+  --accent:#d9bd8d;
+  --accent-deep:#b99c67;
+  --accent-ink:#241b0c;
+  --danger:#d98874;
+  --glow:217,189,141;             /* rgb of current ambient color, JS-updated */
   --font-body:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',system-ui,sans-serif;
   --font-latin:'Familjen Grotesk','Noto Sans SC',system-ui,sans-serif;
   --font-mono:'Chivo Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -24,17 +24,17 @@
   color-scheme:dark;
 }
 :root[data-theme="light"], :root.theme-light{
-  --bg:#f3f5f9;
-  --bg-elev:#ffffff;
-  --card:#ffffff;
-  --card-2:#eef1f7;
-  --line:#dde2ec;
-  --fg:#171b26;
-  --muted:#6a7288;
-  --accent:#0da088;
-  --accent-deep:#0a8671;
-  --accent-ink:#ffffff;
-  --danger:#d84234;
+  --bg:#f3efe7;
+  --bg-elev:#fbf8f2;
+  --card:#fbf8f2;
+  --card-2:#ebe4d7;
+  --line:#dcd2c0;
+  --fg:#27211a;
+  --muted:#8b8070;
+  --accent:#977a44;
+  --accent-deep:#7b6234;
+  --accent-ink:#fffaf0;
+  --danger:#bd5240;
   color-scheme:light;
 }
 
@@ -60,8 +60,8 @@ img{max-width:100%}
 #glow{
   position:fixed; inset:0; z-index:0; pointer-events:none;
   background:
-    radial-gradient(60% 42% at 18% -6%, rgba(var(--glow), .22), transparent 70%),
-    radial-gradient(50% 36% at 88% 4%, rgba(var(--glow), .10), transparent 70%);
+    radial-gradient(60% 42% at 18% -6%, rgba(var(--glow), .18), transparent 70%),
+    radial-gradient(50% 36% at 88% 4%, rgba(var(--glow), .08), transparent 70%);
   transition:background 1.2s ease;
 }
 :root[data-theme="light"] #glow, :root.theme-light #glow{opacity:.5}
@@ -237,7 +237,7 @@ img{max-width:100%}
 .now-bg{
   position:absolute; inset:0; pointer-events:none;
   background:
-    radial-gradient(90% 55% at 50% -8%, rgba(var(--glow), .38), transparent 72%),
+    radial-gradient(90% 55% at 50% -8%, rgba(var(--glow), .30), transparent 72%),
     linear-gradient(var(--bg) 20%, var(--bg));
   background-blend-mode:normal;
 }
@@ -414,9 +414,9 @@ input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; 
   gap:10px;
 }
 .drive-head{display:flex; align-items:center; justify-content:space-between}
-.drive-clock{font-size:34px; font-weight:500; color:#9aa3b8}
+.drive-clock{font-size:34px; font-weight:500; color:#a79c88}
 .drive-exit{
-  font-size:16px; color:#9aa3b8; border:1.5px solid #333a4c; border-radius:999px; padding:10px 22px;
+  font-size:16px; color:#a79c88; border:1.5px solid #39322a; border-radius:999px; padding:10px 22px;
 }
 .drive-meta{flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center; min-height:0}
 .drive-title{
@@ -424,18 +424,18 @@ input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; 
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
   text-wrap:balance;
 }
-.drive-sub{margin:10px 0 0; font-size:clamp(16px, 4vw, 22px); color:#9aa3b8;
+.drive-sub{margin:10px 0 0; font-size:clamp(16px, 4vw, 22px); color:#a79c88;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.drive-prog{height:6px; border-radius:3px; background:#232838; overflow:hidden}
+.drive-prog{height:6px; border-radius:3px; background:#272117; overflow:hidden}
 .drive-prog-fill{height:100%; width:0%; background:rgb(var(--glow)); border-radius:3px}
 .drive-ctl{display:flex; align-items:center; justify-content:space-between; gap:14px; padding-top:8px}
 .drive-btn{
   width:clamp(88px, 24vw, 120px); height:clamp(88px, 24vw, 120px); border-radius:50%;
-  background:#161b27; border:1.5px solid #2a3144; color:#fff;
+  background:#1c1813; border:1.5px solid #332c22; color:#fff;
   display:flex; align-items:center; justify-content:center; position:relative; flex:none;
 }
 .drive-btn svg{width:44%; height:44%}
-.drive-btn.main{background:rgb(var(--glow)); border-color:transparent; color:#06101c}
+.drive-btn.main{background:rgb(var(--glow)); border-color:transparent; color:#211808}
 .drive-btn:active{transform:scale(.94)}
 
 /* ---------- toast ---------- */
