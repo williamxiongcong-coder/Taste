@@ -161,7 +161,7 @@ async function playItem(item){
     audio.src = curURL;
     audio.playbackRate = 1;
     current = s; curKind = 'song';
-    setNowUI(s.title, s.artist || '未知歌手', s.pic || null, 'song');
+    setNowUI(s.title, catName(s.cat || 'none'), s.pic || null, 'song');
     audio.play().catch(() => updatePlayUI());
   }else{
     const { feed, ep } = ref;
@@ -604,7 +604,7 @@ function renderSongs(){
     tt.className = 'song-tt';
     const nm = document.createElement('span'); nm.className = 'song-name'; nm.textContent = s.title;
     const sb = document.createElement('span'); sb.className = 'song-sub';
-    sb.textContent = [s.artist || '未知歌手', (s.cat && s.cat !== 'none') ? catName(s.cat) : ''].filter(Boolean).join(' · ');
+    sb.textContent = catName(s.cat || 'none');   // 界面只显示分类，不显示歌手
     tt.append(nm, sb);
     const du = document.createElement('span'); du.className = 'song-dur'; du.textContent = s.dur ? fmt(s.dur) : '--:--';
     const like = document.createElement('button');
