@@ -36,24 +36,26 @@
       </button>
     </header>
 
-    <div class="searchbox">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
-      <input type="search" id="musicSearch" placeholder="搜索歌名、歌手" aria-label="搜索音乐">
+    <div class="chip-row chips-scroll" id="catChips">
+      <button class="chip on" data-mfilter="all">全部</button>
+      <button class="chip" data-mfilter="liked">♥ 喜欢</button>
+      <button class="chip" data-mfilter="piano">钢琴曲</button>
+      <button class="chip" data-mfilter="classical">古典</button>
+      <button class="chip" data-mfilter="country">乡村 Country</button>
+      <button class="chip" data-mfilter="pop">流行</button>
+      <button class="chip" data-mfilter="none">未分类</button>
     </div>
 
     <div class="chip-row">
-      <button class="chip on" data-mfilter="all" id="chipAll">全部</button>
-      <button class="chip" data-mfilter="liked" id="chipLiked">喜欢 ♥</button>
-      <span class="flex-spacer"></span>
       <button class="pill-btn" id="playAllBtn">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>播放全部
       </button>
       <button class="pill-btn ghost" id="shuffleAllBtn">
         <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>随机
       </button>
+      <span class="flex-spacer"></span>
+      <span class="stat-line" id="musicStat">0 首歌曲</span>
     </div>
-
-    <div class="stat-line" id="musicStat">0 首歌曲</div>
 
     <ul class="song-list" id="songList"></ul>
 
@@ -194,9 +196,31 @@
     </header>
 
     <div class="now-art-wrap">
-      <img id="nowArt" alt="" hidden>
-      <div class="now-art-fallback" id="nowArtFb">
-        <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      <div class="turntable" id="turntable">
+        <div class="vinyl" id="vinyl">
+          <div class="vinyl-sheen" aria-hidden="true"></div>
+          <img id="nowArt" alt="" hidden>
+          <div class="vinyl-label" id="nowArtFb">
+            <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+          </div>
+          <span class="spindle" aria-hidden="true"></span>
+        </div>
+        <svg class="tonearm" id="tonearm" viewBox="0 0 120 260" aria-hidden="true">
+          <defs>
+            <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#e8d2a4"/>
+              <stop offset="1" stop-color="#a8854d"/>
+            </linearGradient>
+          </defs>
+          <circle cx="62" cy="42" r="26" fill="#241f18" stroke="#453a29" stroke-width="2"/>
+          <rect x="54" y="2" width="16" height="30" rx="7" fill="#453a29"/>
+          <path d="M62 42 L62 150 L44 206" fill="none" stroke="url(#brass)" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="62" cy="42" r="10" fill="url(#brass)"/>
+          <g transform="rotate(18 44 206)">
+            <rect x="33" y="196" width="22" height="38" rx="6" fill="#241f18" stroke="url(#brass)" stroke-width="2"/>
+            <rect x="40" y="228" width="8" height="9" rx="2" fill="url(#brass)"/>
+          </g>
+        </svg>
       </div>
     </div>
 
@@ -317,6 +341,10 @@
     </button>
   </div>
 </section>
+
+<div id="sheetMask" class="sheet-mask" hidden>
+  <div class="action-sheet" id="actionSheet" role="menu"></div>
+</div>
 
 <div id="toast" role="status"></div>
 <input type="file" id="filePick" multiple accept="audio/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.oga,.opus,.webm" hidden>

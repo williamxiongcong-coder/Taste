@@ -457,3 +457,88 @@ input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; 
   .now-inner{max-width:620px}
   .sub-grid{grid-template-columns:repeat(auto-fill, minmax(128px, 1fr))}
 }
+
+/* ---------- 黑胶唱片机 ---------- */
+.turntable{position:relative; width:min(76vw, 330px); aspect-ratio:1}
+.vinyl{
+  position:absolute; inset:0; border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,246,222,.05), transparent 42%),
+    repeating-radial-gradient(circle at 50% 50%, #0d0b09 0 1.6px, #19140f 1.6px 3.4px);
+  border:1px solid #372e20;
+  box-shadow:0 22px 60px rgba(0,0,0,.55), 0 0 70px rgba(var(--glow), .15);
+  animation:vinyl-spin 7s linear infinite;
+  animation-play-state:paused;
+}
+.turntable.playing .vinyl{animation-play-state:running}
+@keyframes vinyl-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .vinyl{animation:none} }
+.vinyl-sheen{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 18deg,
+    transparent 0 38deg, rgba(255,245,218,.065) 58deg, transparent 92deg,
+    transparent 198deg, rgba(255,245,218,.04) 224deg, transparent 258deg);
+}
+#nowArt, .vinyl-label{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:38%; height:38%; border-radius:50%; object-fit:cover;
+  border:3px solid #3a3122; box-shadow:0 0 0 6px #0d0b09;
+}
+.vinyl-label{
+  background:radial-gradient(circle, #3b3122, #231e14 72%);
+  display:flex; align-items:center; justify-content:center; color:var(--accent);
+}
+.vinyl-label svg{width:34%; height:34%}
+.spindle{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:11px; height:11px; border-radius:50%; background:var(--fg);
+  border:2px solid #191410; z-index:2;
+}
+.tonearm{
+  position:absolute; top:-5%; right:-1%; width:29%; height:auto; z-index:3;
+  transform-origin:51.6% 16.2%;
+  transform:rotate(-27deg);
+  transition:transform .9s cubic-bezier(.3,.8,.3,1);
+  filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));
+}
+.turntable.playing .tonearm{transform:rotate(-4deg)}
+@media (prefers-reduced-motion: reduce){ .tonearm{transition:none} }
+
+/* ---------- 横滑分类条 ---------- */
+.chips-scroll{
+  flex-wrap:nowrap; overflow-x:auto;
+  margin-inline:-18px; padding-inline:18px; padding-bottom:3px;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+}
+.chips-scroll::-webkit-scrollbar{display:none}
+.chips-scroll .chip{flex:none; white-space:nowrap}
+
+/* ---------- 底部操作菜单 ---------- */
+.sheet-mask{
+  position:fixed; inset:0; z-index:80;
+  background:rgba(10,8,5,.55);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.action-sheet{
+  width:100%; max-width:480px;
+  background:var(--bg-elev); border:1px solid var(--line);
+  border-radius:22px 22px 0 0;
+  padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex; flex-direction:column; gap:3px;
+  animation:sheet-up .25s cubic-bezier(.3,.9,.3,1);
+}
+@keyframes sheet-up{from{transform:translateY(30%)}}
+@media (prefers-reduced-motion: reduce){ .action-sheet{animation:none} }
+.as-title{
+  font-size:12.5px; color:var(--muted); padding:4px 13px 9px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.as-item{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  text-align:left; font-size:15px; padding:13px 14px; border-radius:12px;
+}
+.as-item:hover{background:var(--card)}
+.as-item .check{color:var(--accent); font-weight:700}
+.as-item.danger{color:var(--danger)}
+.as-sep{height:1px; background:var(--line); margin:6px 8px}

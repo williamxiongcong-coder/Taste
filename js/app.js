@@ -354,6 +354,7 @@ function updatePlayUI(){
   $$('.i-play').forEach(el => el.toggleAttribute('hidden', !!playing));
   $$('.i-pause').forEach(el => el.toggleAttribute('hidden', !playing));
   $$('.song.active').forEach(r => r.classList.toggle('playing', !!playing));
+  $('#turntable').classList.toggle('playing', !!playing);   // 唱片旋转 + 唱臂落下
   try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'; }catch(e){}
 }
 
@@ -423,6 +424,24 @@ $('#mini').addEventListener('click', () => { $('#nowSheet').hidden = false; });
 $('#nowClose').addEventListener('click', () => { $('#nowSheet').hidden = true; });
 
 /* ================= 音乐库 ================= */
+/* 分类 */
+const CATS = [
+  { id: 'piano',     name: '钢琴曲' },
+  { id: 'classical', name: '古典' },
+  { id: 'country',   name: '乡村 Country' },
+  { id: 'pop',       name: '流行' },
+  { id: 'none',      name: '未分类' }
+];
+const catName = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).name;
+/* 根据音乐文件自带的流派标签 / 文件名猜一个分类 */
+function guessCat(meta, fileName){
+  const g = ((meta.genre || '') + ' ' + (meta.title || '') + ' ' + (meta.album || '') + ' ' + fileName).toLowerCase();
+  if(/piano|钢琴/.test(g)) return 'piano';
+  if(/classic|古典|baroque|sympho|orchestr|concerto|sonata|violin|小提琴|大提琴|chopin|mozart|beethoven|bach|debussy|肖邦|莫扎特|贝多芬|巴赫/.test(g)) return 'classical';
+  if(/country|乡村|bluegrass|folk/.test(g)) return 'country';
+  if(/pop|流行|rock|r&b|hip.?hop|rap|dance|electro|摇滚/.test(g)) return 'pop';
+  return 'none';
+}
 function readTags(file){
   return new Promise(resolve => {
     const fallback = () => {
@@ -430,7 +449,7 @@ function readTags(file){
       let artist = '', title = base;
       const m = base.split(' - ');
       if(m.length >= 2){ artist = m[0].trim(); title = m.slice(1).join(' - ').trim(); }
-      resolve({ title: title || file.name, artist, album: '', pic: null });
+      resolve({ title: title || file.name, artist, album: '', genre: '', pic: null });
     };
     if(!window.jsmediatags) return fallback();
     let done = false;
@@ -446,7 +465,7 @@ function readTags(file){
           }
           const base = file.name.replace(/\.[^.]+$/, '');
           resolve({ title: (tg.title || '').trim() || base, artist: (tg.artist || '').trim(),
-                    album: (tg.album || '').trim(), pic });
+                    album: (tg.album || '').trim(), genre: (tg.genre || '').trim(), pic });
         },
         onError(){ if(!done){ done = true; clearTimeout(timer); fallback(); } }
       });
@@ -473,6 +492,7 @@ async function addFiles(fileList){
   for(const f of files){
     const meta = await readTags(f);
     const t = { id: uid(), title: meta.title, artist: meta.artist, album: meta.album,
+                cat: guessCat(meta, f.name),
                 pic: meta.pic, blob: f, dur: 0, liked: false, addedAt: Date.now() };
     songs.push(t);
     S.put('songs', t);
@@ -482,11 +502,10 @@ async function addFiles(fileList){
   toast('已添加 ' + files.length + ' 首歌曲');
 }
 function visibleSongs(){
-  const q = $('#musicSearch').value.trim().toLowerCase();
   return songs.filter(s => {
-    if(musicFilter === 'liked' && !s.liked) return false;
-    if(q && !((s.title + ' ' + s.artist + ' ' + s.album).toLowerCase().includes(q))) return false;
-    return true;
+    if(musicFilter === 'all') return true;
+    if(musicFilter === 'liked') return !!s.liked;
+    return (s.cat || 'none') === musicFilter;
   });
 }
 const coverURLs = new Map();   // songId -> objectURL（缩略图缓存）
@@ -519,7 +538,7 @@ function renderSongs(){
     tt.className = 'song-tt';
     const nm = document.createElement('span'); nm.className = 'song-name'; nm.textContent = s.title;
     const sb = document.createElement('span'); sb.className = 'song-sub';
-    sb.textContent = [s.artist || '未知歌手', s.album].filter(Boolean).join(' · ');
+    sb.textContent = [s.artist || '未知歌手', (s.cat && s.cat !== 'none') ? catName(s.cat) : ''].filter(Boolean).join(' · ');
     tt.append(nm, sb);
     const du = document.createElement('span'); du.className = 'song-dur'; du.textContent = s.dur ? fmt(s.dur) : '--:--';
     const like = document.createElement('button');
@@ -535,17 +554,10 @@ function renderSongs(){
     });
     const more = document.createElement('button');
     more.className = 'song-more';
-    more.setAttribute('aria-label', '删除 ' + s.title);
-    more.title = '删除';
-    more.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 12H7L6 9z"/></svg>';
-    more.addEventListener('click', e => {
-      e.stopPropagation();
-      if(more.dataset.armed){ removeSong(s); return; }
-      more.dataset.armed = '1';
-      more.style.color = 'var(--danger)';
-      toast('再点一次删除「' + s.title + '」');
-      setTimeout(() => { delete more.dataset.armed; more.style.color = ''; }, 3000);
-    });
+    more.setAttribute('aria-label', s.title + ' 的分类与删除');
+    more.title = '分类 / 删除';
+    more.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
+    more.addEventListener('click', e => { e.stopPropagation(); openSongMenu(s); });
     li.append(cov, tt, du, like, more);
     li.addEventListener('click', () => {
       const items = visibleSongs().map(x => ({ kind: 'song', id: x.id }));
@@ -572,6 +584,47 @@ function removeSong(s){
   renderSongs();
   toast('已删除');
 }
+/* 底部操作菜单：分类 + 删除 */
+const sheetMask = $('#sheetMask');
+sheetMask.addEventListener('click', e => { if(e.target === sheetMask) sheetMask.hidden = true; });
+function openSongMenu(s){
+  const sheet = $('#actionSheet');
+  sheet.textContent = '';
+  const title = document.createElement('div');
+  title.className = 'as-title';
+  title.textContent = s.title + ' · 选择分类';
+  sheet.appendChild(title);
+  for(const c of CATS){
+    const b = document.createElement('button');
+    b.className = 'as-item';
+    const label = document.createElement('span');
+    label.textContent = c.name;
+    b.appendChild(label);
+    if((s.cat || 'none') === c.id){
+      const ck = document.createElement('span');
+      ck.className = 'check';
+      ck.textContent = '✓';
+      b.appendChild(ck);
+    }
+    b.addEventListener('click', () => {
+      s.cat = c.id;
+      S.put('songs', s);
+      sheetMask.hidden = true;
+      renderSongs();
+      toast('已归入「' + c.name + '」');
+    });
+    sheet.appendChild(b);
+  }
+  const sep = document.createElement('div');
+  sep.className = 'as-sep';
+  sheet.appendChild(sep);
+  const del = document.createElement('button');
+  del.className = 'as-item danger';
+  del.textContent = '删除这首歌';
+  del.addEventListener('click', () => { sheetMask.hidden = true; removeSong(s); });
+  sheet.appendChild(del);
+  sheetMask.hidden = false;
+}
 function playAllSongs(shuffled){
   const list = visibleSongs();
   if(!list.length){ toast('先添加一些音乐吧'); return; }
@@ -584,7 +637,6 @@ $('#emptyAddBtn').addEventListener('click', () => $('#filePick').click());
 $('#filePick').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
 $('#playAllBtn').addEventListener('click', () => playAllSongs(false));
 $('#shuffleAllBtn').addEventListener('click', () => playAllSongs(true));
-$('#musicSearch').addEventListener('input', renderSongs);
 $$('.chip[data-mfilter]').forEach(c => c.addEventListener('click', () => {
   musicFilter = c.dataset.mfilter;
   $$('.chip[data-mfilter]').forEach(x => x.classList.toggle('on', x === c));
@@ -963,6 +1015,7 @@ async function init(){
     db = await idbOpen();
     const [sv, fv, pv] = await Promise.all([S.all('songs'), S.all('feeds'), S.all('positions')]);
     songs = (sv || []).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+    songs.forEach(s => { if(!s.cat) s.cat = 'none'; });   // 老数据补上分类字段
     feeds = (fv || []).sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
     positions = {};
     (pv || []).forEach(p => positions[p.key] = p);
