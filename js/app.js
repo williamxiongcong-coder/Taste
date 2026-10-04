@@ -449,6 +449,8 @@ const CATS = [
   { id: 'piano',     name: '钢琴曲' },
   { id: 'classical', name: '古典' },
   { id: 'inst',      name: '轻音乐' },
+  { id: 'cnretro',   name: '中式复古' },
+  { id: 'rock',      name: '摇滚' },
   { id: 'country',   name: '乡村 Country' },
   { id: 'pop',       name: '流行' },
   { id: 'none',      name: '未分类' }
@@ -460,6 +462,8 @@ const ARTIST_CATS = [
   [/richard clayderman|克莱德曼|yiruma|李闰珉|maksim|马克西姆|郎朗|lang lang|李云迪|yundi li/i, 'piano'],
   [/chopin|mozart|beethoven|bach|debussy|tchaikovsky|liszt|schubert|brahms|vivaldi|handel|haydn|rachmaninoff|paganini|rubinstein|肖邦|莫扎特|贝多芬|巴赫|德彪西|柴可夫斯基|李斯特|舒伯特|维瓦尔第|帕格尼尼/i, 'classical'],
   [/bandari|班得瑞|kenny g|凯丽金|yanni|雅尼|secret garden|神秘园|enya|恩雅|久石让|joe hisaishi|karunesh|kevin kern/i, 'inst'],
+  [/邓丽君|teresa teng|蔡琴|tsai chin|费玉清|凤飞飞|徐小凤|周璇|白光|李香兰|梅艳芳|anita mui|张国荣|leslie cheung|罗大佑|齐豫|姚苏蓉|甄妮|龙飘飘|韩宝仪/i, 'cnretro'],
+  [/beyond|黄家驹|崔健|唐朝乐队|黑豹乐队|许巍|汪峰|郑钧|窦唯|朴树|谢天笑|二手玫瑰|痛仰|queen|nirvana|metallica|linkin park|guns n.? roses|ac\/dc|bon jovi|aerosmith|eagles|scorpions|radiohead|oasis|green day/i, 'rock'],
   [/john denver|kenny rogers|dolly parton|shania twain|carrie underwood|luke combs|morgan wallen|blake shelton|alan jackson|tim mcgraw|garth brooks|johnny cash|keith urban/i, 'country'],
   [/周杰伦|jay chou|林俊杰|jj lin|邓紫棋|g\.e\.m|陈奕迅|eason chan|王力宏|薛之谦|李荣浩|张学友|刘德华|王菲|孙燕姿|五月天|mayday|张惠妹|陶喆|方大同|毛不易|周深|李宗盛|陈绮贞|taylor swift|ed sheeran|adele|bruno mars|justin bieber|billie eilish|maroon 5|coldplay|westlife|backstreet boys|avril|lady gaga|rihanna/i, 'pop']
 ];
@@ -470,8 +474,10 @@ function guessCat(meta, fileName){
   if(/piano|钢琴/.test(g)) return 'piano';
   if(/classic|古典|baroque|sympho|orchestr|concerto|sonata|nocturne|etude|violin|cello|小提琴|大提琴|协奏曲|交响|夜曲集/.test(g)) return 'classical';
   if(/new age|instrumental|纯音乐|轻音乐|soundtrack|原声|bgm|ambient/.test(g)) return 'inst';
+  if(/复古|老歌|国风|怀旧金曲/.test(g)) return 'cnretro';
+  if(/rock|摇滚|metal|punk|grunge/.test(g)) return 'rock';
   if(/country|乡村|bluegrass/.test(g)) return 'country';
-  if(/pop|流行|rock|r&b|hip.?hop|rap|dance|electro|摇滚|民谣|说唱/.test(g)) return 'pop';
+  if(/pop|流行|r&b|hip.?hop|rap|dance|electro|民谣|说唱/.test(g)) return 'pop';
   return 'none';
 }
 
@@ -483,7 +489,8 @@ function mapITunesGenre(name){
   if(/country|乡村/.test(n)) return 'country';
   if(/new age|instrumental|soundtrack|easy listening|ambient|轻音乐|纯音乐|新世纪|原声/.test(n)) return 'inst';
   if(/piano|钢琴/.test(n)) return 'piano';
-  if(/pop|rock|r&b|soul|hip|rap|dance|electronic|singer|folk|alternative|metal|indie|流行|摇滚|说唱|嘻哈|民谣|舞曲|电子/.test(n)) return 'pop';
+  if(/rock|metal|punk|grunge|alternative|摇滚/.test(n)) return 'rock';
+  if(/pop|r&b|soul|hip|rap|dance|electronic|singer|folk|indie|流行|说唱|嘻哈|民谣|舞曲|电子/.test(n)) return 'pop';
   return null;
 }
 async function lookupCat(s){
