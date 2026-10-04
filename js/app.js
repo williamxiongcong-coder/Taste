@@ -447,7 +447,7 @@ $('#nowClose').addEventListener('click', () => { $('#nowSheet').hidden = true; }
 /* 分类 */
 const CATS = [
   { id: 'piano',     name: '钢琴曲' },
-  { id: 'classical', name: '古典' },
+  { id: 'classical', name: '西方古典' },
   { id: 'inst',      name: '轻音乐' },
   { id: 'cnretro',   name: '中式复古' },
   { id: 'rock',      name: '摇滚' },
