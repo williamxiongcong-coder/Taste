@@ -379,6 +379,24 @@ function applyVolume(v){
 }
 nowVol.addEventListener('input', () => { applyVolume(+nowVol.value); ls.set('vol', +nowVol.value); });
 
+/* iOS 系统不允许网页调节音量（滑杆无效），换成提示文字；安卓/桌面保留滑杆 */
+(function(){
+  const probe = document.createElement('audio');
+  try{ probe.volume = 0.5; }catch(e){}
+  const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(isiOS || probe.volume !== 0.5){
+    const vol = document.querySelector('.vol');
+    if(vol){
+      vol.textContent = '';
+      const hint = document.createElement('span');
+      hint.className = 'vol-hint';
+      hint.textContent = '音量请用手机侧键调节';
+      vol.appendChild(hint);
+    }
+  }
+})();
+
 $('#nowPlay').addEventListener('click', togglePlay);
 $('#nowPlayPod').addEventListener('click', togglePlay);
 $('#miniPlay').addEventListener('click', e => { e.stopPropagation(); togglePlay(); });
