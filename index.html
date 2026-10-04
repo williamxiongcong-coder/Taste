@@ -56,7 +56,7 @@
 
     <nav class="cat-tabs chips-scroll" id="catChips" aria-label="音乐分类">
       <button class="chip on" data-mfilter="all">全部</button>
-      <button class="chip" data-mfilter="liked">♥ 喜欢</button>
+      <button class="chip" data-mfilter="liked">&#x2665;&#xFE0E; 喜欢</button>
       <button class="chip" data-mfilter="piano">钢琴曲</button>
       <button class="chip" data-mfilter="classical">古典</button>
       <button class="chip" data-mfilter="inst">轻音乐</button>
@@ -88,10 +88,10 @@
 
   <!-- ====== 播客 ====== -->
   <main id="view-podcast" class="view" hidden>
-    <header class="vhead">
-      <div class="vtitle">
-        <span class="logo-dot" aria-hidden="true"></span>
-        <h1>播客</h1>
+    <header class="mast">
+      <div class="mast-text">
+        <div class="brand-eyebrow latin">PODCASTS</div>
+        <h1 class="greet">播客</h1>
       </div>
       <button class="icon-btn" id="podRssBtn" title="通过 RSS 链接添加" aria-label="通过 RSS 链接添加">
         <svg viewBox="0 0 24 24"><path d="M6.18 17.82a2.18 2.18 0 1 1-4.36 0 2.18 2.18 0 0 1 4.36 0zM2 8.73v2.91c5.72 0 10.36 4.64 10.36 10.36h2.91C15.27 14.67 9.33 8.73 2 8.73zM2 3v2.91C11.36 5.91 18.09 12.64 18.09 22H21C21 11.03 12.97 3 2 3z"/></svg>
@@ -119,14 +119,15 @@
 
   <!-- ====== 设置 ====== -->
   <main id="view-settings" class="view" hidden>
-    <header class="vhead">
-      <div class="vtitle">
-        <span class="logo-dot" aria-hidden="true"></span>
-        <h1>设置</h1>
+    <header class="mast">
+      <div class="mast-text">
+        <div class="brand-eyebrow latin">SETTINGS</div>
+        <h1 class="greet">设置</h1>
       </div>
     </header>
 
-    <div class="set-card">
+    <div class="set-group">
+      <div class="set-eyebrow latin">PLAYBACK</div>
       <div class="set-row">
         <div><b>外观</b><span class="dim">跟随系统 / 深色 / 浅色</span></div>
         <div class="seg" id="themeSeg">
@@ -145,7 +146,8 @@
       </div>
     </div>
 
-    <div class="set-card">
+    <div class="set-group">
+      <div class="set-eyebrow latin">DATA</div>
       <div class="set-row">
         <div><b>安装到手机</b><span class="dim">iPhone：Safari 打开 → 分享 → 添加到主屏幕<br>安卓：Chrome 打开 → 菜单 → 安装应用</span></div>
       </div>
