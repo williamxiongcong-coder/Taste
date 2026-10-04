@@ -1,5 +1,5 @@
 /* Taste service worker — 应用外壳离线可用；音频与 RSS 始终走网络 */
-const VERSION = 'taste-v10';
+const VERSION = 'taste-v11';
 const CORE = [
   './',
   'index.html',

@@ -448,7 +448,6 @@ $('#nowClose').addEventListener('click', () => { $('#nowSheet').hidden = true; }
 const CATS = [
   { id: 'piano',     name: '钢琴曲' },
   { id: 'classical', name: '西方古典' },
-  { id: 'inst',      name: '轻音乐' },
   { id: 'cnretro',   name: '中式复古' },
   { id: 'rock',      name: '摇滚' },
   { id: 'country',   name: '乡村 Country' },
@@ -461,7 +460,7 @@ const catName = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).nam
 const ARTIST_CATS = [
   [/richard clayderman|克莱德曼|yiruma|李闰珉|maksim|马克西姆|郎朗|lang lang|李云迪|yundi li/i, 'piano'],
   [/chopin|mozart|beethoven|bach|debussy|tchaikovsky|liszt|schubert|brahms|vivaldi|handel|haydn|rachmaninoff|paganini|rubinstein|肖邦|莫扎特|贝多芬|巴赫|德彪西|柴可夫斯基|李斯特|舒伯特|维瓦尔第|帕格尼尼/i, 'classical'],
-  [/bandari|班得瑞|kenny g|凯丽金|yanni|雅尼|secret garden|神秘园|enya|恩雅|久石让|joe hisaishi|karunesh|kevin kern/i, 'inst'],
+  [/bandari|班得瑞|kenny g|凯丽金|yanni|雅尼|secret garden|神秘园|enya|恩雅|久石让|joe hisaishi|karunesh|kevin kern/i, 'pop'],
   [/邓丽君|teresa teng|蔡琴|tsai chin|费玉清|凤飞飞|徐小凤|周璇|白光|李香兰|梅艳芳|anita mui|张国荣|leslie cheung|罗大佑|齐豫|姚苏蓉|甄妮|龙飘飘|韩宝仪/i, 'cnretro'],
   [/beyond|黄家驹|崔健|唐朝乐队|黑豹乐队|许巍|汪峰|郑钧|窦唯|朴树|谢天笑|二手玫瑰|痛仰|queen|nirvana|metallica|linkin park|guns n.? roses|ac\/dc|bon jovi|aerosmith|eagles|scorpions|radiohead|oasis|green day/i, 'rock'],
   [/john denver|kenny rogers|dolly parton|shania twain|carrie underwood|luke combs|morgan wallen|blake shelton|alan jackson|tim mcgraw|garth brooks|johnny cash|keith urban/i, 'country'],
@@ -473,7 +472,7 @@ function guessCat(meta, fileName){
   const g = hay.toLowerCase();
   if(/piano|钢琴/.test(g)) return 'piano';
   if(/classic|古典|baroque|sympho|orchestr|concerto|sonata|nocturne|etude|violin|cello|小提琴|大提琴|协奏曲|交响|夜曲集/.test(g)) return 'classical';
-  if(/new age|instrumental|纯音乐|轻音乐|soundtrack|原声|bgm|ambient/.test(g)) return 'inst';
+  if(/new age|instrumental|纯音乐|轻音乐|soundtrack|原声|bgm|ambient/.test(g)) return 'pop';
   if(/复古|老歌|国风|怀旧金曲/.test(g)) return 'cnretro';
   if(/rock|摇滚|metal|punk|grunge/.test(g)) return 'rock';
   if(/country|乡村|bluegrass/.test(g)) return 'country';
@@ -487,7 +486,7 @@ function mapITunesGenre(name){
   const n = String(name).toLowerCase();
   if(/classical|opera|chamber|古典|歌剧/.test(n)) return 'classical';
   if(/country|乡村/.test(n)) return 'country';
-  if(/new age|instrumental|soundtrack|easy listening|ambient|轻音乐|纯音乐|新世纪|原声/.test(n)) return 'inst';
+  if(/new age|instrumental|soundtrack|easy listening|ambient|轻音乐|纯音乐|新世纪|原声/.test(n)) return 'pop';
   if(/piano|钢琴/.test(n)) return 'piano';
   if(/rock|metal|punk|grunge|alternative|摇滚/.test(n)) return 'rock';
   if(/pop|r&b|soul|hip|rap|dance|electronic|singer|folk|indie|流行|说唱|嘻哈|民谣|舞曲|电子/.test(n)) return 'pop';
@@ -1149,7 +1148,10 @@ async function init(){
     db = await idbOpen();
     const [sv, fv, pv] = await Promise.all([S.all('songs'), S.all('feeds'), S.all('positions')]);
     songs = (sv || []).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
-    songs.forEach(s => { if(!s.cat) s.cat = 'none'; });   // 老数据补上分类字段
+    songs.forEach(s => {
+      if(!s.cat) s.cat = 'none';                        // 老数据补上分类字段
+      if(s.cat === 'inst'){ s.cat = 'pop'; S.put('songs', s); }   // 轻音乐分类已并入流行
+    });
     feeds = (fv || []).sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
     positions = {};
     (pv || []).forEach(p => positions[p.key] = p);
