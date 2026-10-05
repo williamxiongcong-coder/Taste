@@ -162,6 +162,9 @@ async function playItem(item){
     audio.playbackRate = 1;
     current = s; curKind = 'song';
     ls.set('lastSong', s.id);
+    const retro = s.cat === 'cnretro';
+    $('#nowTitle').classList.toggle('retro-script', retro);
+    $('#miniTitle').classList.toggle('retro-script', retro);
     setNowUI(s.title, catName(s.cat || 'none'), s.pic || null, 'song');
     audio.play().catch(() => updatePlayUI());
   }else{
@@ -169,6 +172,8 @@ async function playItem(item){
     audio.src = ep.url;
     audio.playbackRate = rate;
     current = { feed, ep }; curKind = 'ep';
+    $('#nowTitle').classList.remove('retro-script');
+    $('#miniTitle').classList.remove('retro-script');
     setNowUI(ep.title, feed.title, feed.cover || null, 'ep');
     const saved = positions[posKey(feed.id, ep.guid)];
     const target = (saved && saved.pos > 12 && (!saved.dur || saved.pos < saved.dur - 20)) ? Math.max(0, saved.pos - 3) : 0;
@@ -387,13 +392,7 @@ nowVol.addEventListener('input', () => { applyVolume(+nowVol.value); ls.set('vol
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if(isiOS || probe.volume !== 0.5){
     const vol = document.querySelector('.vol');
-    if(vol){
-      vol.textContent = '';
-      const hint = document.createElement('span');
-      hint.className = 'vol-hint';
-      hint.textContent = '音量请用手机侧键调节';
-      vol.appendChild(hint);
-    }
+    if(vol) vol.remove();   // iOS 调不了音量，整行隐藏（大家都懂用侧键）
   }
 })();
 
@@ -629,6 +628,7 @@ function renderSongs(){
     const tt = document.createElement('div');
     tt.className = 'song-tt';
     const nm = document.createElement('span'); nm.className = 'song-name'; nm.textContent = s.title;
+    if(s.cat === 'cnretro') nm.classList.add('retro-script');
     const sb = document.createElement('span'); sb.className = 'song-sub';
     sb.textContent = catName(s.cat || 'none');   // 界面只显示分类，不显示歌手
     tt.append(nm, sb);
@@ -676,6 +676,7 @@ function renderHero(){
   if(!t){ hero.hidden = true; return; }
   hero.hidden = false;
   $('#heroTitle').textContent = t.title;
+  $('#heroTitle').classList.toggle('retro-script', (t.cat || '') === 'cnretro');
   $('#heroSub').textContent = catName(t.cat || 'none');
   const isCur = curKind === 'song' && current === t;
   const playingThis = isCur && !audio.paused;
