@@ -454,7 +454,7 @@ const CATS = [
   { id: 'classical', name: '西方古典' },
   { id: 'cnretro',   name: '东方古典' },
   { id: 'rock',      name: '摇滚' },
-  { id: 'country',   name: '乡村 Country' },
+  { id: 'country',   name: '乡村' },
   { id: 'pop',       name: '流行' },
   { id: 'none',      name: '未分类' }
 ];
