@@ -853,8 +853,6 @@ html{scrollbar-width:thin; scrollbar-color:var(--line) transparent}
 .mini-title.retro-script{font-size:17px}
 #nowTitle.retro-script{font-size:32px; font-weight:400}
 #heroTitle.retro-script{font-size:21px; font-weight:400}
-.cat-tabs .chip[data-mfilter="cnretro"]{font-family:var(--font-retro); font-size:17px; line-height:1}
-.cat-tabs .chip[data-mfilter="cnretro"].on{font-weight:400}
 /* 高优先级：确保书法体盖过衬线标题规则 */
 #nowTitle.retro-script, #heroTitle.retro-script{font-family:var(--font-retro)}
 
