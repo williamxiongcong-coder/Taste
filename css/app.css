@@ -866,3 +866,12 @@ html{scrollbar-width:thin; scrollbar-color:var(--line) transparent}
 @media (prefers-reduced-motion: reduce){
   .ink-mist, .ink-rain{animation:none}
 }
+
+/* ---------- 英文曲名全局花体（中文不受影响，按字形回退） ---------- */
+.song-name, .mini-title, .pod-hit .tt b, .ep-title{font-family:'Great Vibes', var(--font-body)}
+.song-name{font-size:16px}
+.mini-title{font-size:15px}
+#nowTitle{font-family:'Great Vibes', var(--font-serif)}
+.hero-meta b{font-family:'Great Vibes', var(--font-serif)}
+/* 东方古典的小篆规则重申（保持最高优先级） */
+.retro-script, #nowTitle.retro-script, #heroTitle.retro-script{font-family:var(--font-retro)}
