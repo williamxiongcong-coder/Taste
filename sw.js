@@ -1,10 +1,15 @@
 /* Taste service worker — 应用外壳离线可用；音频与 RSS 始终走网络 */
-const VERSION = 'taste-v16';
+const VERSION = 'taste-v17';
 const CORE = [
   './',
   'index.html',
   'css/app.css',
   'js/app.js',
+  'js/s2t.js',
+  'js/jsmediatags.min.js',
+  'fonts/GreatVibes.woff2',
+  'fonts/FamiljenGrotesk.woff2',
+  'fonts/ChivoMono.woff2',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',

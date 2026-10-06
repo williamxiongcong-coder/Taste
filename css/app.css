@@ -819,6 +819,28 @@ html{scrollbar-width:thin; scrollbar-color:var(--line) transparent}
 
 /* ---------- 中式复古 · 书法字体（中文毛笔体/设备隶书优先，英文花体） ---------- */
 @font-face{
+  font-family:'Great Vibes';
+  src:url('../fonts/GreatVibes.woff2') format('woff2');
+  font-display:swap;
+}
+@font-face{
+  font-family:'Ma Shan Zheng';
+  src:url('../fonts/MaShanZheng.woff2') format('woff2');
+  font-display:swap;
+}
+@font-face{
+  font-family:'Familjen Grotesk';
+  src:url('../fonts/FamiljenGrotesk.woff2') format('woff2');
+  font-weight:400 700;
+  font-display:swap;
+}
+@font-face{
+  font-family:'Chivo Mono';
+  src:url('../fonts/ChivoMono.woff2') format('woff2');
+  font-weight:100 900;
+  font-display:swap;
+}
+@font-face{
   font-family:'FZXiaoZhuan';
   src:url('../fonts/FZXiaoZhuanTi.woff2') format('woff2');
   font-display:swap;
