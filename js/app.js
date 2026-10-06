@@ -167,7 +167,7 @@ async function playItem(item){
     $('#miniTitle').classList.toggle('retro-script', retro);
     $('#turntable').hidden = retro;        // 东方古典：水墨江南替代黑胶
     $('#inkscene').hidden = !retro;
-    setNowUI(s.title, catName(s.cat || 'none'), s.pic || null, 'song');
+    setNowUI(s.cat === 'cnretro' ? toTrad(s.title) : s.title, catName(s.cat || 'none'), s.pic || null, 'song');
     audio.play().catch(() => updatePlayUI());
   }else{
     const { feed, ep } = ref;
@@ -460,6 +460,20 @@ const CATS = [
 ];
 const catName = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).name;
 
+/* 小篆显示用：简→繁转换（仅改变显示文本，不动存储数据） */
+let s2tMap = null;
+function toTrad(str){
+  if(!window.S2T) return str;
+  if(!s2tMap){
+    s2tMap = new Map();
+    const F = Array.from(S2T.from), T = Array.from(S2T.to);   // 按码点配对，防生僻字错位
+    for(let i = 0; i < F.length; i++) s2tMap.set(F[i], T[i]);
+  }
+  let out = '';
+  for(const ch of str) out += (s2tMap.get(ch) || ch);
+  return out;
+}
+
 /* 第一层：本地规则 —— 熟知的歌手 / 作曲家直接判定 */
 const ARTIST_CATS = [
   [/richard clayderman|克莱德曼|yiruma|李闰珉|maksim|马克西姆|郎朗|lang lang|李云迪|yundi li/i, 'piano'],
@@ -632,7 +646,8 @@ function renderSongs(){
     }
     const tt = document.createElement('div');
     tt.className = 'song-tt';
-    const nm = document.createElement('span'); nm.className = 'song-name'; nm.textContent = s.title;
+    const nm = document.createElement('span'); nm.className = 'song-name';
+    nm.textContent = s.cat === 'cnretro' ? toTrad(s.title) : s.title;
     if(s.cat === 'cnretro') nm.classList.add('retro-script');
     const sb = document.createElement('span'); sb.className = 'song-sub';
     sb.textContent = catName(s.cat || 'none');   // 界面只显示分类，不显示歌手
@@ -680,7 +695,7 @@ function renderHero(){
   const t = heroTarget();
   if(!t){ hero.hidden = true; return; }
   hero.hidden = false;
-  $('#heroTitle').textContent = t.title;
+  $('#heroTitle').textContent = (t.cat || '') === 'cnretro' ? toTrad(t.title) : t.title;
   $('#heroTitle').classList.toggle('retro-script', (t.cat || '') === 'cnretro');
   $('#heroSub').textContent = catName(t.cat || 'none');
   const isCur = curKind === 'song' && current === t;
