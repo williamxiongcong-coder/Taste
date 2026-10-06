@@ -830,3 +830,34 @@ html{scrollbar-width:thin; scrollbar-color:var(--line) transparent}
 .cat-tabs .chip[data-mfilter="cnretro"].on{font-weight:400}
 /* 高优先级：确保书法体盖过衬线标题规则 */
 #nowTitle.retro-script, #heroTitle.retro-script{font-family:var(--font-retro)}
+
+/* ---------- 东方古典 · 水墨江南播放场景 ---------- */
+.inkscene{
+  position:relative; width:min(76vw, 330px); aspect-ratio:1;
+  border-radius:50%; overflow:hidden;
+  background:linear-gradient(175deg, #f3edde 0%, #ece5d2 55%, #e2d9c2 100%);
+  border:1px solid #c6b998;
+  box-shadow:var(--shadow-hero), inset 0 0 40px rgba(120,105,75,.10);
+}
+.ink-art{position:absolute; inset:0; width:100%; height:100%}
+.ink-mist{
+  position:absolute; left:-25%; width:150%; height:17%;
+  background:linear-gradient(90deg, transparent, rgba(243,237,222,.92) 30%, rgba(243,237,222,.92) 70%, transparent);
+  filter:blur(6px);
+  animation:mist-drift 44s ease-in-out infinite alternate;
+  animation-play-state:paused;
+}
+.ink-mist.m1{top:44%}
+.ink-mist.m2{top:62%; animation-duration:58s; animation-direction:alternate-reverse}
+@keyframes mist-drift{from{transform:translateX(-5%)} to{transform:translateX(6%)}}
+.ink-rain{
+  position:absolute; inset:-34% 0 0 0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='64'%3E%3Cg stroke='%234a453e' stroke-opacity='.17' stroke-width='1.2' stroke-linecap='round'%3E%3Cline x1='10' y1='4' x2='7' y2='20'/%3E%3Cline x1='30' y1='14' x2='27' y2='30'/%3E%3Cline x1='44' y1='36' x2='41' y2='52'/%3E%3Cline x1='18' y1='44' x2='15' y2='60'/%3E%3C/g%3E%3C/svg%3E");
+  animation:rain-fall 1s linear infinite;
+  animation-play-state:paused;
+}
+@keyframes rain-fall{from{background-position:0 0} to{background-position:-12px 64px}}
+.inkscene.playing .ink-mist, .inkscene.playing .ink-rain{animation-play-state:running}
+@media (prefers-reduced-motion: reduce){
+  .ink-mist, .ink-rain{animation:none}
+}

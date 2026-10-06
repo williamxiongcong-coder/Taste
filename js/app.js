@@ -165,6 +165,8 @@ async function playItem(item){
     const retro = s.cat === 'cnretro';
     $('#nowTitle').classList.toggle('retro-script', retro);
     $('#miniTitle').classList.toggle('retro-script', retro);
+    $('#turntable').hidden = retro;        // 东方古典：水墨江南替代黑胶
+    $('#inkscene').hidden = !retro;
     setNowUI(s.title, catName(s.cat || 'none'), s.pic || null, 'song');
     audio.play().catch(() => updatePlayUI());
   }else{
@@ -174,6 +176,8 @@ async function playItem(item){
     current = { feed, ep }; curKind = 'ep';
     $('#nowTitle').classList.remove('retro-script');
     $('#miniTitle').classList.remove('retro-script');
+    $('#turntable').hidden = false;
+    $('#inkscene').hidden = true;
     setNowUI(ep.title, feed.title, feed.cover || null, 'ep');
     const saved = positions[posKey(feed.id, ep.guid)];
     const target = (saved && saved.pos > 12 && (!saved.dur || saved.pos < saved.dur - 20)) ? Math.max(0, saved.pos - 3) : 0;
@@ -361,6 +365,7 @@ function updatePlayUI(){
   $$('.i-pause').forEach(el => el.toggleAttribute('hidden', !playing));
   $$('.song.active').forEach(r => r.classList.toggle('playing', !!playing));
   $('#turntable').classList.toggle('playing', !!playing);   // 唱片旋转 + 唱臂落下
+  $('#inkscene').classList.toggle('playing', !!playing);     // 水墨场景：雨丝 + 雾带
   renderHero();
   try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'; }catch(e){}
 }
