@@ -1183,7 +1183,16 @@ async function init(){
   switchTab(ls.get('tab', 'music'));
 
   if('serviceWorker' in navigator){
-    try{ navigator.serviceWorker.register('sw.js'); }catch(e){}
+    try{
+      navigator.serviceWorker.register('sw.js');
+      /* 新版本激活后自动刷新一次，用户无需手动关开应用 */
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if(reloaded) return;
+        reloaded = true;
+        if(navigator.serviceWorker.controller) location.reload();
+      });
+    }catch(e){}
   }
 }
 init();
