@@ -714,6 +714,10 @@ function removeSong(s){
   if(i < 0) return;
   songs.splice(i, 1);
   S.del('songs', s.id);
+  if(s.builtin){
+    const rm = ls.get('removedBuiltin', []);
+    if(!rm.includes(s.id)){ rm.push(s.id); ls.set('removedBuiltin', rm); }
+  }
   if(coverURLs.has(s.id)){ URL.revokeObjectURL(coverURLs.get(s.id)); coverURLs.delete(s.id); }
   if(current === s){
     audio.pause(); audio.removeAttribute('src'); audio.load();
@@ -758,6 +762,27 @@ function openSongMenu(s){
   const sep = document.createElement('div');
   sep.className = 'as-sep';
   sheet.appendChild(sep);
+  const ren = document.createElement('button');
+  ren.className = 'as-item';
+  ren.textContent = '重命名';
+  ren.addEventListener('click', () => {
+    sheetMask.hidden = true;
+    const name = window.prompt ? prompt('歌曲名称：', s.title) : null;
+    if(name && name.trim() && name.trim() !== s.title){
+      s.title = name.trim();
+      S.put('songs', s);
+      renderSongs();
+      if(current === s){
+        const disp = s.cat === 'cnretro' ? toTrad(s.title) : s.title;
+        $('#nowTitle').textContent = disp;
+        $('#miniTitle').textContent = disp;
+        $('#driveTitle').textContent = disp;
+        document.title = disp + ' · Taste';
+      }
+      toast('已重命名');
+    }
+  });
+  sheet.appendChild(ren);
   const del = document.createElement('button');
   del.className = 'as-item danger';
   del.textContent = '删除这首歌';
@@ -1154,6 +1179,41 @@ document.addEventListener('keydown', e => {
 window.addEventListener('pagehide', savePosNow);
 
 /* ================= 启动 ================= */
+
+/* 内置曲目：随应用分发，首次打开自动装入本机曲库；删除过的不再重装 */
+async function importBuiltins(){
+  let list;
+  try{
+    const r = await fetch('music/builtin.json', { cache: 'no-cache' });
+    if(!r.ok) return;
+    list = await r.json();
+  }catch(e){ return; }
+  const removed = ls.get('removedBuiltin', []);
+  let added = 0;
+  for(const b of (list || [])){
+    if(!b || !b.id || !b.file) continue;
+    if(songs.some(s => s.id === b.id) || removed.includes(b.id)) continue;
+    try{
+      const res = await fetch(b.file);
+      if(!res.ok) continue;
+      const blob = await res.blob();
+      const fname = b.file.split('/').pop();
+      const meta = await readTags(new File([blob], fname, { type: blob.type || 'audio/mpeg' }));
+      const title = (b.title || meta.title || fname).trim();
+      const artist = (b.artist || meta.artist || '').trim();
+      const t = { id: b.id, builtin: true, title, artist,
+                  album: meta.album || '', genre: meta.genre || '',
+                  cat: (b.cat && b.cat !== 'none') ? b.cat : guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
+                  pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };
+      songs.push(t);
+      S.put('songs', t);
+      added++;
+      probeDuration(blob).then(d => { if(d){ t.dur = d; S.put('songs', t); renderSongs(); } });
+    }catch(e){}
+  }
+  if(added){ renderSongs(); toast('收到 ' + added + ' 首新歌 🎁'); }
+}
+
 async function init(){
   applyTheme();
   const h = new Date().getHours();
@@ -1181,14 +1241,17 @@ async function init(){
   renderSongs();
   renderSubs();
   switchTab(ls.get('tab', 'music'));
+  importBuiltins();   // 随应用分发的内置曲目，首次自动装入曲库
 
   if('serviceWorker' in navigator){
     try{
       navigator.serviceWorker.register('sw.js');
-      /* 新版本激活后自动刷新一次，用户无需手动关开应用 */
+      /* 新版本激活后自动刷新一次，用户无需手动关开应用。
+         首次安装时 claim 也会触发 controllerchange，这种情况不刷新 */
+      const hadController = !!navigator.serviceWorker.controller;
       let reloaded = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if(reloaded) return;
+        if(!hadController || reloaded) return;
         reloaded = true;
         if(navigator.serviceWorker.controller) location.reload();
       });

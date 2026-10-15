@@ -1,5 +1,5 @@
 /* Taste service worker — 应用外壳离线可用；音频与 RSS 始终走网络 */
-const VERSION = 'taste-v20';
+const VERSION = 'taste-v21';
 const CORE = [
   './',
   'index.html',
@@ -39,6 +39,7 @@ self.addEventListener('fetch', e => {
 
   // 音频流、RSS、代理请求：不缓存，直接走网络
   if(req.headers.has('range') || req.destination === 'audio') return;
+  if(new URL(req.url).pathname.includes('/music/')) return;   // 内置曲目走 IndexedDB，不占双份缓存
 
   // 应用自身文件：网络优先，离线回退缓存
   if(url.origin === location.origin){
