@@ -1182,6 +1182,18 @@ window.addEventListener('pagehide', savePosNow);
 /* ================= 启动 ================= */
 
 /* 内置曲目：随应用分发，首次打开自动装入本机曲库；删除过的不再重装 */
+/* 下载内置曲目并校验确实是 MP3（防运营商劫持返回网页、半截文件） */
+async function fetchBuiltinBlob(url){
+  const res = await fetch(url, { cache: 'no-cache' });
+  if(!res.ok) return null;
+  const blob = await res.blob();
+  if(blob.size < 10000) return null;
+  const h = new Uint8Array(await blob.slice(0, 3).arrayBuffer());
+  const isMp3 = (h[0] === 0x49 && h[1] === 0x44 && h[2] === 0x33) ||
+                (h[0] === 0xFF && (h[1] & 0xE0) === 0xE0);
+  return isMp3 ? blob : null;
+}
+
 async function importBuiltins(){
   let list;
   try{
@@ -1199,6 +1211,18 @@ async function importBuiltins(){
       let changed = false;
       if(b.title && !ex.userRenamed && ex.title !== b.title){ ex.title = b.title; changed = true; }
       if(b.cat && b.cat !== 'none' && !ex.catLocked && ex.cat !== b.cat){ ex.cat = b.cat; changed = true; }
+      if(b.rev && (ex.rev || 0) < b.rev){
+        /* 文件本身修过（比如旧版下载坏了或容器不规范）：换成新文件 */
+        try{
+          const nb = await fetchBuiltinBlob(b.file);
+          if(nb){
+            ex.blob = nb;
+            ex.rev = b.rev;
+            changed = true;
+            probeDuration(nb).then(d => { if(d){ ex.dur = d; S.put('songs', ex); renderSongs(); } });
+          }
+        }catch(e){}
+      }
       if(changed){
         S.put('songs', ex);
         renderSongs();
@@ -1214,14 +1238,13 @@ async function importBuiltins(){
     }
     if(removed.includes(b.id)) continue;
     try{
-      const res = await fetch(b.file);
-      if(!res.ok) continue;
-      const blob = await res.blob();
+      const blob = await fetchBuiltinBlob(b.file);
+      if(!blob) continue;
       const fname = b.file.split('/').pop();
       const meta = await readTags(new File([blob], fname, { type: blob.type || 'audio/mpeg' }));
       const title = (b.title || meta.title || fname).trim();
       const artist = (b.artist || meta.artist || '').trim();
-      const t = { id: b.id, builtin: true, title, artist,
+      const t = { id: b.id, builtin: true, rev: b.rev || 1, title, artist,
                   album: meta.album || '', genre: meta.genre || '',
                   cat: (b.cat && b.cat !== 'none') ? b.cat : guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
                   pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };
