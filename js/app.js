@@ -770,6 +770,7 @@ function openSongMenu(s){
     const name = window.prompt ? prompt('歌曲名称：', s.title) : null;
     if(name && name.trim() && name.trim() !== s.title){
       s.title = name.trim();
+      s.userRenamed = true;   // 用户自己起的名字，内置清单更新时不再覆盖
       S.put('songs', s);
       renderSongs();
       if(current === s){
@@ -1192,7 +1193,26 @@ async function importBuiltins(){
   let added = 0;
   for(const b of (list || [])){
     if(!b || !b.id || !b.file) continue;
-    if(songs.some(s => s.id === b.id) || removed.includes(b.id)) continue;
+    const ex = songs.find(s => s.id === b.id);
+    if(ex){
+      /* 已入库的内置曲目：清单里补了正式歌名/分类就同步过来（用户自己改过的不动） */
+      let changed = false;
+      if(b.title && !ex.userRenamed && ex.title !== b.title){ ex.title = b.title; changed = true; }
+      if(b.cat && b.cat !== 'none' && !ex.catLocked && ex.cat !== b.cat){ ex.cat = b.cat; changed = true; }
+      if(changed){
+        S.put('songs', ex);
+        renderSongs();
+        if(current === ex){
+          const disp = ex.cat === 'cnretro' ? toTrad(ex.title) : ex.title;
+          $('#nowTitle').textContent = disp;
+          $('#miniTitle').textContent = disp;
+          $('#driveTitle').textContent = disp;
+          document.title = disp + ' · Taste';
+        }
+      }
+      continue;
+    }
+    if(removed.includes(b.id)) continue;
     try{
       const res = await fetch(b.file);
       if(!res.ok) continue;
