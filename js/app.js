@@ -480,7 +480,7 @@ const ARTIST_CATS = [
   [/chopin|mozart|beethoven|bach|debussy|tchaikovsky|liszt|schubert|brahms|vivaldi|handel|haydn|rachmaninoff|paganini|rubinstein|肖邦|莫扎特|贝多芬|巴赫|德彪西|柴可夫斯基|李斯特|舒伯特|维瓦尔第|帕格尼尼/i, 'classical'],
   [/bandari|班得瑞|kenny g|凯丽金|yanni|雅尼|secret garden|神秘园|enya|恩雅|久石让|joe hisaishi|karunesh|kevin kern/i, 'pop'],
   [/邓丽君|teresa teng|蔡琴|tsai chin|费玉清|凤飞飞|徐小凤|周璇|白光|李香兰|梅艳芳|anita mui|张国荣|leslie cheung|罗大佑|齐豫|姚苏蓉|甄妮|龙飘飘|韩宝仪/i, 'cnretro'],
-  [/beyond|黄家驹|崔健|唐朝乐队|黑豹乐队|许巍|汪峰|郑钧|窦唯|朴树|谢天笑|二手玫瑰|痛仰|queen|nirvana|metallica|linkin park|guns n.? roses|ac\/dc|bon jovi|aerosmith|eagles|scorpions|radiohead|oasis|green day/i, 'rock'],
+  [/beyond|黄家驹|崔健|唐朝乐队|黑豹乐队|许巍|汪峰|郑钧|窦唯|朴树|谢天笑|二手玫瑰|痛仰|queen|nirvana|metallica|linkin park|guns n.? roses|ac\/dc|bon jovi|aerosmith|eagles|scorpions|radiohead|oasis|green day|clapton|克莱普顿/i, 'rock'],
   [/john denver|kenny rogers|dolly parton|shania twain|carrie underwood|luke combs|morgan wallen|blake shelton|alan jackson|tim mcgraw|garth brooks|johnny cash|keith urban/i, 'country'],
   [/周杰伦|jay chou|林俊杰|jj lin|邓紫棋|g\.e\.m|陈奕迅|eason chan|王力宏|薛之谦|李荣浩|张学友|刘德华|王菲|孙燕姿|五月天|mayday|张惠妹|陶喆|方大同|毛不易|周深|李宗盛|陈绮贞|taylor swift|ed sheeran|adele|bruno mars|justin bieber|billie eilish|maroon 5|coldplay|westlife|backstreet boys|avril|lady gaga|rihanna/i, 'pop']
 ];
