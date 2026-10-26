@@ -525,11 +525,12 @@ async function lookupCat(s){
   return null;
 }
 
-/* 智能分类：先本地规则，认不出再联网查；手动分过的（catLocked）不动 */
+/* 智能分类：先本地规则，认不出再联网查；手动分过的（catLocked）和清单定好分类的内置曲目不动 */
 let classifying = false;
 async function autoClassify(onlyNew){
   if(classifying) return;
-  const targets = songs.filter(s => !s.catLocked && (onlyNew ? (s.cat || 'none') === 'none' : true));
+  const targets = songs.filter(s => !s.catLocked && !(s.builtin && (s.cat || 'none') !== 'none') &&
+                                    (onlyNew ? (s.cat || 'none') === 'none' : true));
   if(!targets.length){ if(!onlyNew) toast('没有需要分类的歌曲'); return; }
   classifying = true;
   if(!onlyNew) toast('正在智能分类 ' + targets.length + ' 首歌曲…');
@@ -1210,7 +1211,10 @@ async function importBuiltins(){
       /* 已入库的内置曲目：清单里补了正式歌名/分类就同步过来（用户自己改过的不动） */
       let changed = false;
       if(b.title && !ex.userRenamed && ex.title !== b.title){ ex.title = b.title; changed = true; }
-      if(b.cat && b.cat !== 'none' && !ex.catLocked && ex.cat !== b.cat){ ex.cat = b.cat; changed = true; }
+      /* catRev 变大 = 清单重新指定过分类，覆盖本机更早的手动选择 */
+      const forceCat = (b.catRev || 0) > (ex.catRev || 0);
+      if(b.cat && b.cat !== 'none' && (forceCat || !ex.catLocked) && ex.cat !== b.cat){ ex.cat = b.cat; changed = true; }
+      if(forceCat){ ex.catRev = b.catRev; changed = true; }
       if(b.rev && (ex.rev || 0) < b.rev){
         /* 文件本身修过（比如旧版下载坏了或容器不规范）：换成新文件 */
         try{
@@ -1231,6 +1235,7 @@ async function importBuiltins(){
           $('#nowTitle').textContent = disp;
           $('#miniTitle').textContent = disp;
           $('#driveTitle').textContent = disp;
+          ['#nowSub', '#miniSub', '#driveSub'].forEach(q => { $(q).textContent = catName(ex.cat || 'none'); });
           document.title = disp + ' · Taste';
         }
       }
@@ -1244,7 +1249,7 @@ async function importBuiltins(){
       const meta = await readTags(new File([blob], fname, { type: blob.type || 'audio/mpeg' }));
       const title = (b.title || meta.title || fname).trim();
       const artist = (b.artist || meta.artist || '').trim();
-      const t = { id: b.id, builtin: true, rev: b.rev || 1, title, artist,
+      const t = { id: b.id, builtin: true, rev: b.rev || 1, catRev: b.catRev || 0, title, artist,
                   album: meta.album || '', genre: meta.genre || '',
                   cat: (b.cat && b.cat !== 'none') ? b.cat : guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
                   pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };

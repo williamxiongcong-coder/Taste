@@ -1,5 +1,5 @@
 [
-  { "id": "builtin-001", "file": "music/builtin-001.mp3", "title": "维也纳宝石奏鸣曲", "artist": "", "cat": "piano", "rev": 2 },
+  { "id": "builtin-001", "file": "music/builtin-001.mp3", "title": "维也纳宝石奏鸣曲", "artist": "", "cat": "classical", "catRev": 1, "rev": 2 },
   { "id": "builtin-002", "file": "music/builtin-002.mp3", "title": "帕萨卡利亚", "artist": "巴赫", "cat": "classical", "rev": 1 },
   { "id": "builtin-003", "file": "music/builtin-003.mp3", "title": "G弦上的咏叹调", "artist": "巴赫", "cat": "classical", "rev": 1 },
   { "id": "builtin-004", "file": "music/builtin-004.mp3", "title": "Wonderful Tonight", "artist": "Eric Clapton", "cat": "rock", "rev": 1 }
