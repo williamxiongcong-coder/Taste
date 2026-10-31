@@ -525,11 +525,11 @@ async function lookupCat(s){
   return null;
 }
 
-/* 智能分类：先本地规则，认不出再联网查；手动分过的（catLocked）和清单定好分类的内置曲目不动 */
+/* 智能分类：先本地规则，认不出再联网查；手动分过的（catLocked）和内置曲目（分类以清单为准，含「未分类」）不动 */
 let classifying = false;
 async function autoClassify(onlyNew){
   if(classifying) return;
-  const targets = songs.filter(s => !s.catLocked && !(s.builtin && (s.cat || 'none') !== 'none') &&
+  const targets = songs.filter(s => !s.catLocked && !s.builtin &&
                                     (onlyNew ? (s.cat || 'none') === 'none' : true));
   if(!targets.length){ if(!onlyNew) toast('没有需要分类的歌曲'); return; }
   classifying = true;
@@ -549,7 +549,7 @@ async function autoClassify(onlyNew){
   }
   classifying = false;
   renderSongs();
-  const left = songs.filter(s => (s.cat || 'none') === 'none').length;
+  const left = songs.filter(s => !s.builtin && (s.cat || 'none') === 'none').length;
   toast('智能分类完成：' + changed + ' 首已归类' + (left ? '，' + left + ' 首没认出来，可点 ⋯ 手动选' : ''));
 }
 function readTags(file){
@@ -1251,7 +1251,7 @@ async function importBuiltins(){
       const artist = (b.artist || meta.artist || '').trim();
       const t = { id: b.id, builtin: true, rev: b.rev || 1, catRev: b.catRev || 0, title, artist,
                   album: meta.album || '', genre: meta.genre || '',
-                  cat: (b.cat && b.cat !== 'none') ? b.cat : guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
+                  cat: b.cat || guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
                   pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };
       songs.push(t);
       S.put('songs', t);
