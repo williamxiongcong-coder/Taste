@@ -58,15 +58,21 @@ let db = null;
 function idbOpen(){
   return new Promise((res, rej) => {
     try{
-      const r = indexedDB.open('taste', 1);
+      const r = indexedDB.open('taste', 2);
       r.onupgradeneeded = () => {
         const d = r.result;
         if(!d.objectStoreNames.contains('songs')) d.createObjectStore('songs', { keyPath: 'id' });
         if(!d.objectStoreNames.contains('feeds')) d.createObjectStore('feeds', { keyPath: 'id' });
         if(!d.objectStoreNames.contains('positions')) d.createObjectStore('positions', { keyPath: 'key' });
+        if(!d.objectStoreNames.contains('meta')) d.createObjectStore('meta', { keyPath: 'id' });
       };
-      r.onsuccess = () => res(r.result);
+      r.onsuccess = () => {
+        const d = r.result;
+        d.onversionchange = () => d.close();   // 别的窗口要升级数据库时让路，免得卡住
+        res(d);
+      };
       r.onerror = () => rej(r.error);
+      r.onblocked = () => toast('请先关掉其他打开着的 Taste 窗口');
     }catch(e){ rej(e); }
   });
 }
@@ -88,6 +94,20 @@ const S = {
   del: (st, k) => idb(st, 'readwrite', o => o.delete(k)).catch(() => {}),
   clear: st => idb(st, 'readwrite', o => o.clear()).catch(() => {})
 };
+
+/* 歌曲音频只在导入时写进 songs 一次，之后改名、分类、喜欢、时长都只写 meta。
+   iOS Safari 把从 IndexedDB 读出来的音频再写回同一条记录，音频会损坏、再也放不了（WebKit bug 235687 / 240216） */
+const META_FIELDS = ['title', 'artist', 'album', 'genre', 'cat', 'catLocked', 'catRev', 'rev', 'liked', 'dur', 'userRenamed'];
+function saveMeta(s){
+  const m = { id: s.id };
+  for(const k of META_FIELDS) if(s[k] !== undefined) m[k] = s[k];
+  return S.put('meta', m);
+}
+const isMp3Head = h => !!h && ((h[0] === 0x49 && h[1] === 0x44 && h[2] === 0x33) ||
+                               (h[0] === 0xFF && (h[1] & 0xE0) === 0xE0));
+async function blobHead(b){
+  try{ return b ? new Uint8Array(await b.slice(0, 4).arrayBuffer()) : null; }catch(e){ return null; }
+}
 
 /* ================= 全局状态 ================= */
 let songs = [];          // {id,title,artist,album,pic,blob,dur,liked,addedAt}
@@ -247,14 +267,31 @@ audio.addEventListener('ended', () => {
 });
 audio.addEventListener('play', updatePlayUI);
 audio.addEventListener('pause', () => { updatePlayUI(); savePosNow(); });
-audio.addEventListener('error', () => {
-  if(current) toast(curKind === 'ep' ? '这一集加载失败，可能需要网络' : '无法播放这个文件');
+const healTried = new Set();
+audio.addEventListener('error', async () => {
+  const s = curKind === 'song' ? current : null;
+  if(s && s.builtin && !healTried.has(s.id)){
+    /* 内置曲目在本机的副本坏了：从网站重新下载一份再播（每首每次打开只试一次） */
+    healTried.add(s.id);
+    toast('正在修复这首歌…');
+    let nb = null;
+    try{ nb = await fetchBuiltinBlob(builtinFile(s)); }catch(e){}
+    if(nb){
+      s.blob = nb;
+      S.put('songs', s);
+      if(current === s) playItem({ kind: 'song', id: s.id });
+      toast('已修复');
+      return;
+    }
+  }
+  if(s && !s.builtin && !(await blobHead(s.blob))) toast('这首歌在本机的文件已损坏，请删除后重新导入');
+  else if(current) toast(curKind === 'ep' ? '这一集加载失败，可能需要网络' : '无法播放这个文件');
   updatePlayUI();
 });
 audio.addEventListener('loadedmetadata', () => {
   $('#nowDur').textContent = fmt(audio.duration);
   if(curKind === 'song' && current && !current.dur && isFinite(audio.duration)){
-    current.dur = audio.duration; S.put('songs', current); renderSongs();
+    current.dur = audio.duration; saveMeta(current); renderSongs();
   }
 });
 
@@ -438,7 +475,7 @@ $('#rateBtn').addEventListener('click', cycleRate);
 $('#nowLike').addEventListener('click', () => {
   if(curKind !== 'song' || !current) return;
   current.liked = !current.liked;
-  S.put('songs', current);
+  saveMeta(current);
   $('#nowLike').classList.toggle('liked', current.liked);
   renderSongs();
 });
@@ -541,7 +578,7 @@ async function autoClassify(onlyNew){
     if(cat === 'none'){ cat = (await lookupCat(s)) || 'none'; usedNet = true; }
     if(cat !== 'none' && cat !== s.cat){
       s.cat = cat;
-      S.put('songs', s);
+      saveMeta(s);
       changed++;
       renderSongs();
     }
@@ -606,7 +643,7 @@ async function addFiles(fileList){
                 pic: meta.pic, blob: f, dur: 0, liked: false, addedAt: Date.now() };
     songs.push(t);
     S.put('songs', t);
-    probeDuration(f).then(d => { if(d){ t.dur = d; S.put('songs', t); renderSongs(); } });
+    probeDuration(f).then(d => { if(d){ t.dur = d; saveMeta(t); renderSongs(); } });
   }
   renderSongs();
   toast('已添加 ' + files.length + ' 首歌曲');
@@ -662,7 +699,7 @@ function renderSongs(){
       : '<svg viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>';
     like.addEventListener('click', e => {
       e.stopPropagation();
-      s.liked = !s.liked; S.put('songs', s); renderSongs();
+      s.liked = !s.liked; saveMeta(s); renderSongs();
       if(current === s) $('#nowLike').classList.toggle('liked', s.liked);
     });
     const more = document.createElement('button');
@@ -715,6 +752,7 @@ function removeSong(s){
   if(i < 0) return;
   songs.splice(i, 1);
   S.del('songs', s.id);
+  S.del('meta', s.id);
   if(s.builtin){
     const rm = ls.get('removedBuiltin', []);
     if(!rm.includes(s.id)){ rm.push(s.id); ls.set('removedBuiltin', rm); }
@@ -753,7 +791,7 @@ function openSongMenu(s){
     b.addEventListener('click', () => {
       s.cat = c.id;
       s.catLocked = true;   // 手动选过的，智能分类不再改动
-      S.put('songs', s);
+      saveMeta(s);
       sheetMask.hidden = true;
       renderSongs();
       toast('已归入「' + c.name + '」');
@@ -772,7 +810,7 @@ function openSongMenu(s){
     if(name && name.trim() && name.trim() !== s.title){
       s.title = name.trim();
       s.userRenamed = true;   // 用户自己起的名字，内置清单更新时不再覆盖
-      S.put('songs', s);
+      saveMeta(s);
       renderSongs();
       if(current === s){
         const disp = s.cat === 'cnretro' ? toTrad(s.title) : s.title;
@@ -1163,7 +1201,7 @@ lightMedia.addEventListener('change', applyTheme);
 /* 清空数据 */
 armConfirm($('#wipeBtn'), '清空', '确认清空？', async () => {
   audio.pause();
-  await S.clear('songs'); await S.clear('feeds'); await S.clear('positions');
+  await S.clear('songs'); await S.clear('meta'); await S.clear('feeds'); await S.clear('positions');
   try{ localStorage.clear(); }catch(e){}
   location.reload();
 });
@@ -1189,11 +1227,9 @@ async function fetchBuiltinBlob(url){
   if(!res.ok) return null;
   const blob = await res.blob();
   if(blob.size < 10000) return null;
-  const h = new Uint8Array(await blob.slice(0, 3).arrayBuffer());
-  const isMp3 = (h[0] === 0x49 && h[1] === 0x44 && h[2] === 0x33) ||
-                (h[0] === 0xFF && (h[1] & 0xE0) === 0xE0);
-  return isMp3 ? blob : null;
+  return isMp3Head(await blobHead(blob)) ? blob : null;
 }
+const builtinFile = s => s.file || ('music/' + s.id + '.mp3');
 
 async function importBuiltins(){
   let list;
@@ -1215,20 +1251,22 @@ async function importBuiltins(){
       const forceCat = (b.catRev || 0) > (ex.catRev || 0);
       if(b.cat && b.cat !== 'none' && (forceCat || !ex.catLocked) && ex.cat !== b.cat){ ex.cat = b.cat; changed = true; }
       if(forceCat){ ex.catRev = b.catRev; changed = true; }
-      if(b.rev && (ex.rev || 0) < b.rev){
-        /* 文件本身修过（比如旧版下载坏了或容器不规范）：换成新文件 */
-        try{
-          const nb = await fetchBuiltinBlob(b.file);
-          if(nb){
-            ex.blob = nb;
-            ex.rev = b.rev;
-            changed = true;
-            probeDuration(nb).then(d => { if(d){ ex.dur = d; S.put('songs', ex); renderSongs(); } });
-          }
-        }catch(e){}
+      /* 文件修过（rev 变大），或本机副本已经读不出来：重新下载一份 */
+      let fresh = null;
+      const stale = b.rev && (ex.rev || 0) < b.rev;
+      if(stale || !isMp3Head(await blobHead(ex.blob))){
+        try{ fresh = await fetchBuiltinBlob(b.file); }catch(e){}
+        if(fresh){
+          ex.blob = fresh;
+          ex.file = b.file;
+          if(b.rev) ex.rev = b.rev;
+          changed = true;
+          probeDuration(fresh).then(d => { if(d){ ex.dur = d; saveMeta(ex); renderSongs(); } });
+        }
       }
       if(changed){
-        S.put('songs', ex);
+        if(fresh) S.put('songs', ex);   // 新下载的音频可以整条写入；只改了信息的不碰音频
+        saveMeta(ex);
         renderSongs();
         if(current === ex){
           const disp = ex.cat === 'cnretro' ? toTrad(ex.title) : ex.title;
@@ -1249,14 +1287,14 @@ async function importBuiltins(){
       const meta = await readTags(new File([blob], fname, { type: blob.type || 'audio/mpeg' }));
       const title = (b.title || meta.title || fname).trim();
       const artist = (b.artist || meta.artist || '').trim();
-      const t = { id: b.id, builtin: true, rev: b.rev || 1, catRev: b.catRev || 0, title, artist,
+      const t = { id: b.id, builtin: true, file: b.file, rev: b.rev || 1, catRev: b.catRev || 0, title, artist,
                   album: meta.album || '', genre: meta.genre || '',
                   cat: b.cat || guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
                   pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };
       songs.push(t);
       S.put('songs', t);
       added++;
-      probeDuration(blob).then(d => { if(d){ t.dur = d; S.put('songs', t); renderSongs(); } });
+      probeDuration(blob).then(d => { if(d){ t.dur = d; saveMeta(t); renderSongs(); } });
     }catch(e){}
   }
   if(added){ renderSongs(); toast('收到 ' + added + ' 首新歌 🎁'); }
@@ -1275,11 +1313,13 @@ async function init(){
 
   try{
     db = await idbOpen();
-    const [sv, fv, pv] = await Promise.all([S.all('songs'), S.all('feeds'), S.all('positions')]);
-    songs = (sv || []).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+    const [sv, mv, fv, pv] = await Promise.all([S.all('songs'), S.all('meta'), S.all('feeds'), S.all('positions')]);
+    const metaById = new Map((mv || []).map(m => [m.id, m]));
+    songs = (sv || []).map(s => Object.assign(s, metaById.get(s.id)))
+                      .sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
     songs.forEach(s => {
       if(!s.cat) s.cat = 'none';                        // 老数据补上分类字段
-      if(s.cat === 'inst'){ s.cat = 'pop'; S.put('songs', s); }   // 轻音乐分类已并入流行
+      if(s.cat === 'inst'){ s.cat = 'pop'; saveMeta(s); }   // 轻音乐分类已并入流行
     });
     feeds = (fv || []).sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
     positions = {};
