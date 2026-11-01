@@ -267,24 +267,34 @@ audio.addEventListener('ended', () => {
 });
 audio.addEventListener('play', updatePlayUI);
 audio.addEventListener('pause', () => { updatePlayUI(); savePosNow(); });
+/* 内置曲目重新从网站下载一份（本机副本坏了时用；手动点菜单也走这里），成功后立刻播放 */
+let redownloading = false;
+async function redownloadBuiltin(s, startMsg, okMsg){
+  if(redownloading){ toast('正在下载，请稍等'); return false; }
+  redownloading = true;
+  toast(startMsg);
+  let nb = null;
+  try{ nb = await fetchBuiltinBlob(builtinFile(s)); }catch(e){}
+  redownloading = false;
+  if(!nb){ toast('下载失败：手机连不上 GitHub，请换个网络再试'); return false; }
+  s.blob = nb;
+  S.put('songs', s);
+  probeDuration(nb).then(d => { if(d){ s.dur = d; saveMeta(s); renderSongs(); } });
+  toast(okMsg);
+  playItem({ kind: 'song', id: s.id });
+  return true;
+}
 const healTried = new Set();
 audio.addEventListener('error', async () => {
   const s = curKind === 'song' ? current : null;
   if(s && s.builtin && !healTried.has(s.id)){
-    /* 内置曲目在本机的副本坏了：从网站重新下载一份再播（每首每次打开只试一次） */
+    /* 内置曲目在本机的副本坏了：从网站重新下载一份再播（每首每次打开只自动试一次） */
     healTried.add(s.id);
-    toast('正在修复这首歌…');
-    let nb = null;
-    try{ nb = await fetchBuiltinBlob(builtinFile(s)); }catch(e){}
-    if(nb){
-      s.blob = nb;
-      S.put('songs', s);
-      if(current === s) playItem({ kind: 'song', id: s.id });
-      toast('已修复');
-      return;
-    }
+    if(!(await redownloadBuiltin(s, '正在修复这首歌…', '已修复'))) updatePlayUI();
+    return;
   }
-  if(s && !s.builtin && !(await blobHead(s.blob))) toast('这首歌在本机的文件已损坏，请删除后重新导入');
+  if(s && s.builtin) toast('还是放不了，可点 ⋯ → 重新下载再试');
+  else if(s && !(await blobHead(s.blob))) toast('这首歌在本机的文件已损坏，请删除后重新导入');
   else if(current) toast(curKind === 'ep' ? '这一集加载失败，可能需要网络' : '无法播放这个文件');
   updatePlayUI();
 });
@@ -823,6 +833,14 @@ function openSongMenu(s){
     }
   });
   sheet.appendChild(ren);
+  if(s.builtin){
+    /* 内置曲目：本机副本放不了时可手动换一份新的 */
+    const rd = document.createElement('button');
+    rd.className = 'as-item';
+    rd.textContent = '重新下载';
+    rd.addEventListener('click', () => { sheetMask.hidden = true; redownloadBuiltin(s, '正在重新下载…', '已重新下载'); });
+    sheet.appendChild(rd);
+  }
   const del = document.createElement('button');
   del.className = 'as-item danger';
   del.textContent = '删除这首歌';
