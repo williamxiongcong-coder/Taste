@@ -1260,6 +1260,27 @@ async function importBuiltins(){
   let added = 0;
   for(const b of (list || [])){
     if(!b || !b.id || !b.file) continue;
+    /* replaces：这首是某个旧条目的全新替代。旧记录整条删掉（本机那份可能已坏），
+       新的作为全新记录只写入一次；只带走「喜欢」和原来的排序位置。用户删过旧的，新的也不装 */
+    let inherit = null;
+    if(b.replaces){
+      const old = songs.find(s => s.id === b.replaces);
+      if(old){
+        inherit = { liked: !!old.liked, addedAt: old.addedAt };
+        songs.splice(songs.indexOf(old), 1);
+        S.del('songs', old.id);
+        S.del('meta', old.id);
+        if(coverURLs.has(old.id)){ URL.revokeObjectURL(coverURLs.get(old.id)); coverURLs.delete(old.id); }
+        if(current === old){
+          audio.pause(); audio.removeAttribute('src'); audio.load();
+          current = null; curKind = null;
+          $('#mini').hidden = true; $('#nowSheet').hidden = true;
+        }
+        renderSongs();
+      }
+      if(ls.get('lastSong', null) === b.replaces) ls.set('lastSong', b.id);
+      if(removed.includes(b.replaces) && !removed.includes(b.id)){ removed.push(b.id); ls.set('removedBuiltin', removed); }
+    }
     const ex = songs.find(s => s.id === b.id);
     if(ex){
       /* 已入库的内置曲目：清单里补了正式歌名/分类就同步过来（用户自己改过的不动） */
@@ -1308,8 +1329,10 @@ async function importBuiltins(){
       const t = { id: b.id, builtin: true, file: b.file, rev: b.rev || 1, catRev: b.catRev || 0, title, artist,
                   album: meta.album || '', genre: meta.genre || '',
                   cat: b.cat || guessCat({ title, artist, album: meta.album, genre: meta.genre }, fname),
-                  pic: meta.pic, blob, dur: 0, liked: false, addedAt: Date.now() };
+                  pic: meta.pic, blob, dur: 0, liked: inherit ? inherit.liked : false,
+                  addedAt: (inherit && inherit.addedAt) || Date.now() };
       songs.push(t);
+      if(inherit) songs.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));   // 替代曲目回到旧条目原来的位置
       S.put('songs', t);
       added++;
       probeDuration(blob).then(d => { if(d){ t.dur = d; saveMeta(t); renderSongs(); } });
