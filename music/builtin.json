@@ -4,5 +4,6 @@
   { "id": "builtin-003", "file": "music/builtin-003.mp3", "title": "G弦上的咏叹调", "artist": "巴赫", "cat": "classical", "rev": 1 },
   { "id": "builtin-004", "file": "music/builtin-004.mp3", "title": "Wonderful Tonight", "artist": "Eric Clapton", "cat": "rock", "rev": 1 },
   { "id": "builtin-005", "file": "music/builtin-005.mp3", "title": "Baby Boy", "artist": "", "cat": "none", "rev": 1 },
-  { "id": "builtin-007", "file": "music/builtin-007.mp3", "title": "Gentle Years Journey", "artist": "", "cat": "country", "rev": 1 }
+  { "id": "builtin-007", "file": "music/builtin-007.mp3", "title": "Gentle Years Journey", "artist": "", "cat": "country", "rev": 1 },
+  { "id": "builtin-008", "file": "music/builtin-008.mp3", "title": "A cup saved for me", "artist": "", "cat": "country", "rev": 1 }
 ]
